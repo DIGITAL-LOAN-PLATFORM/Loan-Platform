@@ -1,0 +1,304 @@
+@page "/settings"
+@using Application.DTO
+@using Application.Services.GuarantorTypes
+@using Application.Services.PaymentModalities
+@using Application.Services.PaymentTypes
+@using Application.Services.Reasons
+@using Domain.Entities
+@using LoanPlatform.Components.Dialogs
+@inject IPaymentTypeService PaymentTypeService
+@inject IPaymentModalityService PaymentModalityService
+@inject IReasonService ReasonService
+@inject IGuarantorTypeService GuarantorTypeService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+    <MudText Typo="Typo.h4" Class="mb-4">Settings</MudText>
+
+    <MudTabs Rounded="true" Elevation="1">
+        <MudTabPanel Text="Payment Types">
+            <MudPaper Class="pa-4">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h6">Payment Types</MudText>
+                    <MudButton OnClick="AddPaymentTypeAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                        Add
+                    </MudButton>
+                </MudStack>
+                <MudTable Items="_paymentTypes" Dense="true" Hover="true" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Id</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Id</MudTd>
+                        <MudTd>@context.Name</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewPaymentTypeAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditPaymentTypeAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeletePaymentTypeAsync(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Payment Modalities">
+            <MudPaper Class="pa-4">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h6">Payment Modalities</MudText>
+                    <MudButton OnClick="AddPaymentModalityAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                        Add
+                    </MudButton>
+                </MudStack>
+                <MudTable Items="_paymentModalities" Dense="true" Hover="true" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Id</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Id</MudTd>
+                        <MudTd>@context.Name</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewPaymentModalityAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditPaymentModalityAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeletePaymentModalityAsync(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Reasons">
+            <MudPaper Class="pa-4">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h6">Reasons</MudText>
+                    <MudButton OnClick="AddReasonAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                        Add
+                    </MudButton>
+                </MudStack>
+                <MudTable Items="_reasons" Dense="true" Hover="true" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Id</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Id</MudTd>
+                        <MudTd>@context.Name</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewReasonAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditReasonAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteReasonAsync(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Guarantor Types">
+            <MudPaper Class="pa-4">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h6">Guarantor Types</MudText>
+                    <MudButton OnClick="AddGuarantorTypeAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                        Add
+                    </MudButton>
+                </MudStack>
+                <MudTable Items="_guarantorTypes" Dense="true" Hover="true" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Id</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Id</MudTd>
+                        <MudTd>@context.Name</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewGuarantorTypeAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditGuarantorTypeAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteGuarantorTypeAsync(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+    private List<PaymentType> _paymentTypes = [];
+    private List<PaymentModality> _paymentModalities = [];
+    private List<Reason> _reasons = [];
+    private List<GuarantorType> _guarantorTypes = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllAsync();
+    }
+
+    private async Task LoadAllAsync()
+    {
+        _paymentTypes = await PaymentTypeService.GetAllAsync();
+        _paymentModalities = await PaymentModalityService.GetAllAsync();
+        _reasons = await ReasonService.GetAllAsync();
+        _guarantorTypes = await GuarantorTypeService.GetAllAsync();
+    }
+
+    private async Task<string?> OpenNameDialogAsync(string title, string currentName = "")
+    {
+        var parameters = new DialogParameters<NameEditDialog>
+        {
+            { x => x.Title, title },
+            { x => x.Name, currentName }
+        };
+
+        var dialog = await DialogService.ShowAsync<NameEditDialog>(title, parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled || result.Data is null)
+        {
+            return null;
+        }
+
+        return result.Data.ToString();
+    }
+
+    private async Task ShowDetailsDialogAsync(string title, int id, string name)
+    {
+        var parameters = new DialogParameters<NameDetailsDialog>
+        {
+            { x => x.Title, title },
+            { x => x.Id, id },
+            { x => x.Name, name }
+        };
+
+        await DialogService.ShowAsync<NameDetailsDialog>(title, parameters);
+    }
+
+    private async Task<bool> ConfirmDeleteAsync(string itemName)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Title, "Confirm Delete" },
+            { x => x.Message, $"Delete '{itemName}'?" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters);
+        var result = await dialog.Result;
+
+        return result is not null && !result.Canceled;
+    }
+
+    private async Task AddPaymentTypeAsync()
+    {
+        var name = await OpenNameDialogAsync("Add Payment Type");
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await PaymentTypeService.CreatePaymentTypeAsync(new CreatePaymentTypeDTO { Name = name });
+        await LoadAllAsync();
+        Snackbar.Add("Payment type added.", Severity.Success);
+    }
+
+    private async Task EditPaymentTypeAsync(PaymentType item)
+    {
+        var name = await OpenNameDialogAsync("Edit Payment Type", item.Name);
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await PaymentTypeService.UpdatePaymentTypeAsync(new UpdatePaymentTypeDTO { Id = item.Id, Name = name });
+        await LoadAllAsync();
+        Snackbar.Add("Payment type updated.", Severity.Success);
+    }
+
+    private async Task DeletePaymentTypeAsync(PaymentType item)
+    {
+        if (!await ConfirmDeleteAsync(item.Name)) return;
+        await PaymentTypeService.DeletePaymentTypeAsync(item.Id);
+        await LoadAllAsync();
+        Snackbar.Add("Payment type deleted.", Severity.Success);
+    }
+
+    private async Task ViewPaymentTypeAsync(PaymentType item) => await ShowDetailsDialogAsync("Payment Type Details", item.Id, item.Name);
+
+    private async Task AddPaymentModalityAsync()
+    {
+        var name = await OpenNameDialogAsync("Add Payment Modality");
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await PaymentModalityService.CreatePaymentModalityAsync(new CreatePaymentModalityDTO { Name = name });
+        await LoadAllAsync();
+        Snackbar.Add("Payment modality added.", Severity.Success);
+    }
+
+    private async Task EditPaymentModalityAsync(PaymentModality item)
+    {
+        var name = await OpenNameDialogAsync("Edit Payment Modality", item.Name);
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await PaymentModalityService.UpdatePaymentModalityAsync(new UpdatePaymentModalityDTO { Id = item.Id, Name = name });
+        await LoadAllAsync();
+        Snackbar.Add("Payment modality updated.", Severity.Success);
+    }
+
+    private async Task DeletePaymentModalityAsync(PaymentModality item)
+    {
+        if (!await ConfirmDeleteAsync(item.Name)) return;
+        await PaymentModalityService.DeletePaymentModalityAsync(item.Id);
+        await LoadAllAsync();
+        Snackbar.Add("Payment modality deleted.", Severity.Success);
+    }
+
+    private async Task ViewPaymentModalityAsync(PaymentModality item) => await ShowDetailsDialogAsync("Payment Modality Details", item.Id, item.Name);
+
+    private async Task AddReasonAsync()
+    {
+        var name = await OpenNameDialogAsync("Add Reason");
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await ReasonService.CreateReasonAsync(new CreateReasonDTO { Name = name });
+        await LoadAllAsync();
+        Snackbar.Add("Reason added.", Severity.Success);
+    }
+
+    private async Task EditReasonAsync(Reason item)
+    {
+        var name = await OpenNameDialogAsync("Edit Reason", item.Name);
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await ReasonService.UpdateReasonAsync(new UpdateReasonDTO { Id = item.Id, Name = name });
+        await LoadAllAsync();
+        Snackbar.Add("Reason updated.", Severity.Success);
+    }
+
+    private async Task DeleteReasonAsync(Reason item)
+    {
+        if (!await ConfirmDeleteAsync(item.Name)) return;
+        await ReasonService.DeleteReasonAsync(item.Id);
+        await LoadAllAsync();
+        Snackbar.Add("Reason deleted.", Severity.Success);
+    }
+
+    private async Task ViewReasonAsync(Reason item) => await ShowDetailsDialogAsync("Reason Details", item.Id, item.Name);
+
+    private async Task AddGuarantorTypeAsync()
+    {
+        var name = await OpenNameDialogAsync("Add Guarantor Type");
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await GuarantorTypeService.CreateGuarantorTypeAsync(new CreateGuarantorTypeDTO { Name = name });
+        await LoadAllAsync();
+        Snackbar.Add("Guarantor type added.", Severity.Success);
+    }
+
+    private async Task EditGuarantorTypeAsync(GuarantorType item)
+    {
+        var name = await OpenNameDialogAsync("Edit Guarantor Type", item.Name);
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await GuarantorTypeService.UpdateGuarantorTypeAsync(new UpdateGuarantorTypeDTO { Id = item.Id, Name = name });
+        await LoadAllAsync();
+        Snackbar.Add("Guarantor type updated.", Severity.Success);
+    }
+
+    private async Task DeleteGuarantorTypeAsync(GuarantorType item)
+    {
+        if (!await ConfirmDeleteAsync(item.Name)) return;
+        await GuarantorTypeService.DeleteGuarantorTypeAsync(item.Id);
+        await LoadAllAsync();
+        Snackbar.Add("Guarantor type deleted.", Severity.Success);
+    }
+
+    private async Task ViewGuarantorTypeAsync(GuarantorType item) => await ShowDetailsDialogAsync("Guarantor Type Details", item.Id, item.Name);
+}

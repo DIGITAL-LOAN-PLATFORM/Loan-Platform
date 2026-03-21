@@ -1,34 +1,73 @@
 @inherits LayoutComponentBase
 
+
 <MudThemeProvider Theme="@CustomTheme" IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
-<MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
+<MudLayout Class="app-shell">
+    <MudAppBar Elevation="2" Dense="false" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@DrawerToggle"
+                       aria-label="Toggle navigation" />
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="ml-1">
+            <a href="/" class="app-bar-brand">
+                <img src="@LogoUrl" alt="PrimeBridge Financial Services" class="app-logo-appbar" />
+            </a>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <MudText Typo="Typo.subtitle1" Color="Color.Inherit">Digital Loan Platform</MudText>
+            </MudHidden>
+        </MudStack>
         <MudSpacer />
         <MudToggleIconButton @bind-Toggled="_isDarkMode"
                              Icon="@Icons.Material.Filled.DarkMode"
-                             ToggledIcon="@Icons.Material.Filled.LightMode" />
+                             ToggledIcon="@Icons.Material.Filled.LightMode"
+                             Color="Color.Inherit" />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-        <NavMenu/>
-    </MudDrawer>
-    <MudMainContent>
-        @Body
+
+    <MudDrawer @bind-Open="_drawerOpen"
+               ClipMode="DrawerClipMode.Always"
+               Elevation="2"
+               Variant="@DrawerVariant.Responsive"
+               Breakpoint="Breakpoint.Md">
+      
+        <NavMenu />
+    </MudDrawer> 
+
+    @* Footer lives inside main column (beside MudDrawer), same horizontal band as page content — not under the drawer. *@
+    <MudMainContent Class="app-main-with-footer">
+        <div class="app-main-body">
+            @Body
+        </div>
+        @* <MudFooter Class="app-footer-bar mud-elevation-2">
+            <MudContainer MaxWidth="MaxWidth.False" Class="py-3 px-4">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                    <MudText Typo="Typo.body2" Color="Color.Inherit">
+                        &copy; @DateTime.UtcNow.Year PrimeBridge Financial Services. All rights reserved.
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Inherit" Style="opacity: 0.9;">
+                        Digital Loan Platform
+                    </MudText>
+                </MudStack>
+            </MudContainer>
+        </MudFooter> *@
     </MudMainContent>
 </MudLayout>
 @code {
-    bool _drawerOpen = true;
+    /// <summary>Static file under wwwroot/Images (filename contains a space).</summary>
+    private const string LogoUrl = "Images/PRIME%20BRIGDE%20LOGO.png";
+
+    private bool _drawerOpen = true;
     private bool _isDarkMode;
 
-    void DrawerToggle()
+    private void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
 
     public MyCustomTheme CustomTheme { get; set; } = new MyCustomTheme();
+
 }

@@ -2,6 +2,71 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+/* App shell: header + sidebar + main + footer */
+html, body {
+    height: 100%;
+}
+
+.app-shell {
+    min-height: 100vh;
+}
+
+/* Main column: fills viewport below app bar; stacks body + footer like app bar styling */
+.app-main-with-footer {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--mud-appbar-height, 64px));
+}
+
+.app-main-body {
+    flex: 1 1 auto;
+    padding: 1rem 1.25rem 1.5rem;
+}
+
+@media (min-width: 960px) {
+    .app-main-body {
+        padding: 1.25rem 1.5rem 2rem;
+    }
+}
+
+.app-bar-brand {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+}
+
+.app-logo-appbar {
+    display: block;
+    height: 40px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+}
+
+.app-drawer-header {
+    border-bottom: 1px solid var(--mud-palette-divider, #e0e0e0);
+}
+
+.app-logo-drawer {
+    display: block;
+    width: 100%;
+    max-width: 220px;
+    height: auto;
+    max-height: 120px;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+/* Match MudAppBar primary strip — only spans the main content area (right of drawer) */
+.app-footer-bar {
+    flex-shrink: 0;
+    width: 100%;
+    background-color: var(--mud-palette-primary);
+    color: var(--mud-palette-appbar-text, #fff);
+    border-top: none;
+}
+
 a, .btn-link {
     color: #006bb7;
 }
