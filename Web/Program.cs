@@ -1,5 +1,23 @@
 using LoanPlatform.Components;
+using Application.Interfaces;
+using Infrastructure;
+using Infrastructure.Services;
 using MudBlazor.Services;
+using Infrastructure.DependencyInjection;
+using Application.Services.PaymentTypes;
+using Application.Services.PaymentModalities;
+using Application.Services.Reasons;
+using Application.Services.GuarantorTypes;
+using Infrastructure.Repositories;
+using Application.DTO;
+using Domain.Entities;
+using Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Validation.Embedded;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +25,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddMudServices();
+
+//Add Services implementations
+builder.Services.AddScoped<IPaymentTypeService, PaymentTypeService>();
+builder.Services.AddScoped<IPaymentModalityService, PaymentModalityService>();
+builder.Services.AddScoped<IReasonService, ReasonService>();
+builder.Services.AddScoped<IGuarantorTypeService, GuarantorTypeService>();
+
+
+
+    builder.Services.AddInfrastructureService(builder.Configuration);
+    builder.Services.AddSingleton<IFileProvider>(builder.Environment.WebRootFileProvider);
+builder.Services.AddSingleton<ILocationService, JsonLocationService>();
 
 var app = builder.Build();
 

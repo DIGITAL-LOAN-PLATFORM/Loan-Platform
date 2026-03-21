@@ -10,5 +10,6 @@ namespace Domain.Entities
         public AccountType? Type { get; set;}
         public decimal? Balance { get; set;}
         public DateTime CreatedAt { get; set; }
+        
     }
 }

@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Kigali City",
+    "districts": [
+      {
+        "name": "Gasabo",
+        "sectors": [
+          {
+            "name": "Kimironko",
+            "cells": [
+              {
+                "name": "Bibare",
+                "villages": [
+                  { "name": "Village A" },
+                  { "name": "Village B" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

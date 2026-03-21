@@ -1,0 +1,36 @@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@Title</MudText>
+        <MudTextField @bind-Value="Name" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Name is required." />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = "Edit";
+
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+
+    private void Save()
+    {
+        if (string.IsNullOrWhiteSpace(Name))
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(Name.Trim()));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

@@ -1,0 +1,31 @@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@Title</MudText>
+        <MudPaper Class="pa-4">
+            <MudText><b>Id:</b> @Id</MudText>
+            <MudText><b>Name:</b> @Name</MudText>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" Variant="Variant.Filled" Color="Color.Primary">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = "Details";
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+
+    private void Close()
+    {
+        MudDialog.Close();
+    }
+}
