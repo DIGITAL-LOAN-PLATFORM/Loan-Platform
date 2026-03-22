@@ -41,6 +41,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDb21tb25cTG9jYXRpb25QaWNrZXIucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Achil/source/repos/Loan-Platform/Web/Components/Dialogs/AccountDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXEFjY291bnREaWFsb2cucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Achil/source/repos/Loan-Platform/Web/Components/Dialogs/BorrowerDialog.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXEJvcnJvd2VyRGlhbG9nLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -55,6 +59,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Achil/source/repos/Loan-Platform/Web/Components/Dialogs/NameEditDialog.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXE5hbWVFZGl0RGlhbG9nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Achil/source/repos/Loan-Platform/Web/Components/Pages/Account.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xBY2NvdW50LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Achil/source/repos/Loan-Platform/Web/Components/Pages/Borrower.razor]
