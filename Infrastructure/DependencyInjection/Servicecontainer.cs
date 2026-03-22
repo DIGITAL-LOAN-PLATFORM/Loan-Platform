@@ -22,6 +22,7 @@ namespace Infrastructure.DependencyInjection
             services.AddScoped<IPaymentModality, PaymentModalityRepository>();
             services.AddScoped<IReason, ReasonRepository>();
             services.AddScoped<IGuarantorType, GuarantorTypeRepository>();
+            services.AddScoped<IBorrower, BorrowerRepository>();
 
 
             return services;

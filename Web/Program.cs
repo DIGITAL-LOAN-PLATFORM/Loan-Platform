@@ -8,6 +8,7 @@ using Application.Services.PaymentTypes;
 using Application.Services.PaymentModalities;
 using Application.Services.Reasons;
 using Application.Services.GuarantorTypes;
+using Application.Services.Borrowers;
 using Infrastructure.Repositories;
 using Application.DTO;
 using Domain.Entities;
@@ -31,6 +32,7 @@ builder.Services.AddScoped<IPaymentTypeService, PaymentTypeService>();
 builder.Services.AddScoped<IPaymentModalityService, PaymentModalityService>();
 builder.Services.AddScoped<IReasonService, ReasonService>();
 builder.Services.AddScoped<IGuarantorTypeService, GuarantorTypeService>();
+builder.Services.AddScoped<IBorrowerService, BorrowerService>();
 
 
 

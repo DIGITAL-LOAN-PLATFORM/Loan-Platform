@@ -13,5 +13,7 @@ namespace Infrastructure.Data
         public DbSet<PaymentModality> PaymentModalities => Set<PaymentModality>();
         public DbSet<Reason> Reasons => Set<Reason>();
         public DbSet<GuarantorType> GuarantorTypes => Set<GuarantorType>();
+        public DbSet<Borrower> Borrowers => Set<Borrower>();
+
     }
 }
