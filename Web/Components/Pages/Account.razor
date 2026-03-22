@@ -1,0 +1,141 @@
+@page "/account"
+@using Application.DTO
+@using Application.Services.Accounts
+@using Domain.Entities
+@using LoanPlatform.Components.Dialogs
+@inject IAccountService AccountService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+    <MudText Typo="Typo.h4" Class="mb-4">Accounts</MudText>
+
+    <MudPaper Class="pa-4">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudText Typo="Typo.h6">Accounts List</MudText>
+            <MudButton OnClick="AddAccountAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                Add
+            </MudButton>
+        </MudStack>
+        <MudTable Items="_accounts" Dense="true" Hover="true" Outlined="true">
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>NAME</MudTh>
+                <MudTh>PROVIDER</MudTh>
+                <MudTh>NUMBER</MudTh>
+                <MudTh>TYPE</MudTh>
+                <MudTh>BALANCE</MudTh>
+                <MudTh>ACTIONS</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Id</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Provider</MudTd>
+                <MudTd>@context.Number</MudTd>
+                <MudTd>@context.Type.ToString()</MudTd>
+                <MudTd>@(context.Balance?.ToString("C") ?? "N/A")</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="@((e) => ViewAccountAsync(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => EditAccountAsync(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@((e) => DeleteAccountAsync(context))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<Domain.Entities.Account> _accounts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _accounts = await AccountService.GetAllAsync();
+    }
+
+    private async Task AddAccountAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Model", new CreateAccountDTO() },
+            { "IsReadOnly", false }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AccountDialog>("Add Account", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            Snackbar.Add("Account added successfully!", Severity.Success);
+            _accounts = await AccountService.GetAllAsync();
+        }
+    }
+
+    private async Task ViewAccountAsync(Domain.Entities.Account account)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Model", new CreateAccountDTO
+                {
+                    Name = account.Name ?? string.Empty,
+                    Provider = account.Provider ?? string.Empty,
+                    Number = account.Number ?? string.Empty,
+                    Type = (int?)account.Type ?? 0,
+                    Balance = account.Balance ?? 0
+                }
+            },
+            { "IsReadOnly", true }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AccountDialog>("View Account", parameters, options);
+        await dialog.Result;
+    }
+
+    private async Task EditAccountAsync(Domain.Entities.Account account)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Model", new CreateAccountDTO
+                {
+                    Name = account.Name ?? string.Empty,
+                    Provider = account.Provider ?? string.Empty,
+                    Number = account.Number ?? string.Empty,
+                    Type = (int?)account.Type ?? 0,
+                    Balance = account.Balance ?? 0
+                }
+            },
+            { "AccountId", account.Id },
+            { "IsReadOnly", false }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AccountDialog>("Edit Account", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            Snackbar.Add("Account updated successfully!", Severity.Success);
+            _accounts = await AccountService.GetAllAsync();
+        }
+    }
+
+    private async Task DeleteAccountAsync(Domain.Entities.Account account)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", "Confirm Delete" },
+            { "Message", $"Are you sure you want to delete the account '{account.Name}'?" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            await AccountService.DeleteAccountAsync(account.Id);
+            Snackbar.Add("Account deleted successfully!", Severity.Success);
+            _accounts = await AccountService.GetAllAsync();
+        }
+    }
+}

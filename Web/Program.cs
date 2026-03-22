@@ -1,6 +1,5 @@
 using LoanPlatform.Components;
 using Application.Interfaces;
-using Infrastructure;
 using Infrastructure.Services;
 using MudBlazor.Services;
 using Infrastructure.DependencyInjection;
@@ -9,16 +8,8 @@ using Application.Services.PaymentModalities;
 using Application.Services.Reasons;
 using Application.Services.GuarantorTypes;
 using Application.Services.Borrowers;
-using Infrastructure.Repositories;
-using Application.DTO;
-using Domain.Entities;
-using Domain.ValueObjects;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
+using Application.Services.Accounts;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Validation.Embedded;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +24,7 @@ builder.Services.AddScoped<IPaymentModalityService, PaymentModalityService>();
 builder.Services.AddScoped<IReasonService, ReasonService>();
 builder.Services.AddScoped<IGuarantorTypeService, GuarantorTypeService>();
 builder.Services.AddScoped<IBorrowerService, BorrowerService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 
 

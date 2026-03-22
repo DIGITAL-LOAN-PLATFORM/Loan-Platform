@@ -23,6 +23,7 @@ namespace Infrastructure.DependencyInjection
             services.AddScoped<IReason, ReasonRepository>();
             services.AddScoped<IGuarantorType, GuarantorTypeRepository>();
             services.AddScoped<IBorrower, BorrowerRepository>();
+            services.AddScoped<IAccount, AccountRepository>();
 
 
             return services;

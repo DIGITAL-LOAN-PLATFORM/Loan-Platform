@@ -115,13 +115,10 @@ namespace Infrastructure.Repositories
         {
             var borrower = await _context.Borrowers.FindAsync(id);
             if (borrower != null)
-
             {
-
                 _context.Borrowers.Remove(borrower);
 
                 await _context.SaveChangesAsync();
-
             }
 
         }
