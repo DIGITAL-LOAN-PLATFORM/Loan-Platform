@@ -1,0 +1,235 @@
+@using Application.DTO
+@using Application.Interfaces
+@using Domain.Entities
+@inject ILocationService LocationService
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" IsValid="@_success" ValidationDelay="0">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.IdentificationNumber" Label="ID Number" Required="true" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.FirstName" Label="First Name" Required="true" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.LastName" Label="Last Name" Required="true" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    @if (IsReadOnly)
+                    {
+                        <MudTextField @bind-Value="Model.Gender" Label="Gender" ReadOnly="true" />
+                    }
+                    else
+                    {
+                        <MudSelect @bind-Value="Model.Gender" Label="Gender">
+                            <MudSelectItem Value="@("Male")">Male</MudSelectItem>
+                            <MudSelectItem Value="@("Female")">Female</MudSelectItem>
+                        </MudSelect>
+                    }
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.Email" Label="Email" InputType="InputType.Email" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.PhoneNumber" Label="Phone Number" Required="true" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker @bind-Date="DobBinding" Label="Date of Birth" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    @if (IsReadOnly)
+                    {
+                        <MudTextField @bind-Value="Model.MaritalStatus" Label="Marital Status" ReadOnly="true" />
+                    }
+                    else
+                    {
+                        <MudSelect @bind-Value="Model.MaritalStatus" Label="Marital Status">
+                            <MudSelectItem Value="@("Single")">Single</MudSelectItem>
+                            <MudSelectItem Value="@("Married")">Married</MudSelectItem>
+                            <MudSelectItem Value="@("Divorced")">Divorced</MudSelectItem>
+                            <MudSelectItem Value="@("Widowed")">Widowed</MudSelectItem>
+                        </MudSelect>
+                    }
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.SpouseName" Label="Spouse Name" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.SpouseId" Label="Spouse ID" ReadOnly="IsReadOnly" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" Value="Model.Province" Label="Province" ValueChanged="OnProvinceChanged" ReadOnly="IsReadOnly" Required="true">
+                        @foreach (var p in _provinces)
+                        {
+                            <MudSelectItem Value="@p.Name">@p.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" Value="Model.District" Label="District" ValueChanged="OnDistrictChanged" ReadOnly="IsReadOnly" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Province))">
+                        @foreach (var d in _districts)
+                        {
+                            <MudSelectItem Value="@d.Name">@d.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" Value="Model.Sector" Label="Sector" ValueChanged="OnSectorChanged" ReadOnly="IsReadOnly" Required="true" Disabled="@(string.IsNullOrEmpty(Model.District))">
+                        @foreach (var s in _sectors)
+                        {
+                            <MudSelectItem Value="@s.Name">@s.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Value="Model.Cell" Label="Cell" ValueChanged="OnCellChanged" ReadOnly="IsReadOnly" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Sector))">
+                        @foreach (var c in _cells)
+                        {
+                            <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Village" @bind-Value="Model.Village" ReadOnly="IsReadOnly" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Cell))">
+                        @foreach (var v in _villages)
+                        {
+                            <MudSelectItem Value="@v.Name">@v.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        @if (IsReadOnly)
+        {
+            <MudButton Color="Color.Primary" OnClick="Cancel">Close</MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public UpdateBorrowerDTO Model { get; set; } = new();
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+    private MudForm _form = default!;
+    private bool _success;
+
+    private List<Province> _provinces = new();
+    private List<District> _districts = new();
+    private List<Sector> _sectors = new();
+    private List<Cell> _cells = new();
+    private List<Village> _villages = new();
+
+    private DateTime? DobBinding
+    {
+        get => Model.DOB == default ? null : Model.DOB;
+        set => Model.DOB = value ?? default;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _provinces = await LocationService.GetAllLocationsAsync();
+        
+        if (!string.IsNullOrEmpty(Model.Province))
+        {
+            var province = _provinces.FirstOrDefault(p => p.Name == Model.Province);
+            if (province != null)
+            {
+                _districts = province.Districts;
+                if (!string.IsNullOrEmpty(Model.District))
+                {
+                    var district = _districts.FirstOrDefault(d => d.Name == Model.District);
+                    if (district != null)
+                    {
+                        _sectors = district.Sectors;
+                        if (!string.IsNullOrEmpty(Model.Sector))
+                        {
+                            var sector = _sectors.FirstOrDefault(s => s.Name == Model.Sector);
+                            if (sector != null)
+                            {
+                                _cells = sector.Cells;
+                                if (!string.IsNullOrEmpty(Model.Cell))
+                                {
+                                    var cell = _cells.FirstOrDefault(c => c.Name == Model.Cell);
+                                    if (cell != null)
+                                    {
+                                        _villages = cell.Villages;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void OnProvinceChanged(string value)
+    {
+        Model.Province = value;
+        Model.District = string.Empty;
+        Model.Sector = string.Empty;
+        Model.Cell = string.Empty;
+        Model.Village = string.Empty;
+        
+        _districts = _provinces.FirstOrDefault(p => p.Name == value)?.Districts ?? new();
+        _sectors = new();
+        _cells = new();
+        _villages = new();
+    }
+
+    private void OnDistrictChanged(string value)
+    {
+        Model.District = value;
+        Model.Sector = string.Empty;
+        Model.Cell = string.Empty;
+        Model.Village = string.Empty;
+
+        _sectors = _districts.FirstOrDefault(d => d.Name == value)?.Sectors ?? new();
+        _cells = new();
+        _villages = new();
+    }
+
+    private void OnSectorChanged(string value)
+    {
+        Model.Sector = value;
+        Model.Cell = string.Empty;
+        Model.Village = string.Empty;
+
+        _cells = _sectors.FirstOrDefault(s => s.Name == value)?.Cells ?? new();
+        _villages = new();
+    }
+
+    private void OnCellChanged(string value)
+    {
+        Model.Cell = value;
+        Model.Village = string.Empty;
+
+        _villages = _cells.FirstOrDefault(c => c.Name == value)?.Villages ?? new();
+    }
+
+    private async Task Save()
+    {
+        await _form.ValidateAsync();
+        if (_form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(Model));
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

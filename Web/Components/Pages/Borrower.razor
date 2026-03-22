@@ -1,0 +1,180 @@
+@page "/borrower"
+@using Application.DTO
+@using Application.Services.Borrowers
+@using Domain.Entities
+@using LoanPlatform.Components.Dialogs
+@inject IBorrowerService BorrowerService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+    <MudText Typo="Typo.h4" Class="mb-4">Borrowers</MudText>
+
+    <MudPaper Class="pa-4">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudText Typo="Typo.h6">Borrowers List</MudText>
+            <MudButton OnClick="AddBorrowerAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                Add
+            </MudButton>
+        </MudStack>
+        <MudTable Items="_borrowers" Dense="true" Hover="true" Outlined="true">
+            <HeaderContent>
+                <MudTh>ID NUMBER</MudTh>
+                <MudTh>NAME</MudTh>
+                <MudTh>GENDER</MudTh>
+                <MudTh>PHONE NUMBER</MudTh>
+                <MudTh>EMAIL</MudTh>
+                <MudTh>ADDRESS</MudTh>
+                <MudTh>ACTIONS</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.IdentificationNumber</MudTd>
+                <MudTd>@($"{context.FirstName} {context.LastName}")</MudTd>
+                <MudTd>@context.Gender</MudTd>
+                <MudTd>@context.PhoneNumber</MudTd>
+                <MudTd>@context.Email</MudTd>
+                <MudTd>@($"{context.Province}, {context.District}")</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewBorrowerAsync(context)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditBorrowerAsync(context)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteBorrowerAsync(context)" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<Domain.Entities.Borrower> _borrowers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _borrowers = await BorrowerService.GetAllAsync();
+    }
+
+    private async Task AddBorrowerAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Model", new UpdateBorrowerDTO() }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<BorrowerDialog>("Add Borrower", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is UpdateBorrowerDTO dto)
+        {
+            var createDto = new CreateBorrowerDTO
+            {
+                IdentificationNumber = dto.IdentificationNumber,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Gender = dto.Gender,
+                Email = dto.Email,
+                PhoneNumber = dto.PhoneNumber,
+                DOB = dto.DOB,
+                MaritalStatus = dto.MaritalStatus,
+                SpouseName = dto.SpouseName,
+                SpouseId = dto.SpouseId,
+                Province = dto.Province,
+                District = dto.District,
+                Sector = dto.Sector,
+                Cell = dto.Cell,
+                Village = dto.Village
+            };
+            
+            await BorrowerService.CreateBorrowerAsync(createDto);
+            await OnInitializedAsync();
+            Snackbar.Add("Borrower created successfully", Severity.Success);
+        }
+    }
+
+    private async Task EditBorrowerAsync(Domain.Entities.Borrower borrower)
+    {
+        var dto = new UpdateBorrowerDTO
+        {
+            Id = borrower.Id,
+            IdentificationNumber = borrower.IdentificationNumber ?? "",
+            FirstName = borrower.FirstName ?? "",
+            LastName = borrower.LastName ?? "",
+            Gender = borrower.Gender ?? "",
+            Email = borrower.Email ?? "",
+            PhoneNumber = borrower.PhoneNumber ?? "",
+            DOB = borrower.DOB ?? default,
+            MaritalStatus = borrower.MaritalStatus ?? "",
+            SpouseName = borrower.SpouseName ?? "",
+            SpouseId = borrower.SpouseId ?? "",
+            Province = borrower.Province ?? "",
+            District = borrower.District ?? "",
+            Sector = borrower.Sector ?? "",
+            Cell = borrower.Cell ?? "",
+            Village = borrower.Village ?? ""
+        };
+
+        var parameters = new DialogParameters
+        {
+            { "Model", dto }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<BorrowerDialog>("Edit Borrower", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is UpdateBorrowerDTO updatedDto)
+        {
+            await BorrowerService.UpdateBorrowerAsync(updatedDto);
+            await OnInitializedAsync();
+            Snackbar.Add("Borrower updated successfully", Severity.Success);
+        }
+    }
+
+    private async Task ViewBorrowerAsync(Domain.Entities.Borrower borrower)
+    {
+        var dto = new UpdateBorrowerDTO
+        {
+            Id = borrower.Id,
+            IdentificationNumber = borrower.IdentificationNumber ?? "",
+            FirstName = borrower.FirstName ?? "",
+            LastName = borrower.LastName ?? "",
+            Gender = borrower.Gender ?? "",
+            Email = borrower.Email ?? "",
+            PhoneNumber = borrower.PhoneNumber ?? "",
+            DOB = borrower.DOB ?? default,
+            MaritalStatus = borrower.MaritalStatus ?? "",
+            SpouseName = borrower.SpouseName ?? "",
+            SpouseId = borrower.SpouseId ?? "",
+            Province = borrower.Province ?? "",
+            District = borrower.District ?? "",
+            Sector = borrower.Sector ?? "",
+            Cell = borrower.Cell ?? "",
+            Village = borrower.Village ?? ""
+        };
+
+        var parameters = new DialogParameters
+        {
+            { "Model", dto },
+            { "IsReadOnly", true }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<BorrowerDialog>("View Borrower", parameters, options);
+        await dialog.Result;
+    }
+
+    private async Task DeleteBorrowerAsync(Domain.Entities.Borrower borrower)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", "Confirm Delete" },
+            { "Message", $"Are you sure you want to delete {borrower.FirstName} {borrower.LastName}?" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            await BorrowerService.DeleteBorrowerAsync(borrower.Id);
+            await OnInitializedAsync();
+            Snackbar.Add("Borrower deleted successfully", Severity.Success);
+        }
+    }
+}
