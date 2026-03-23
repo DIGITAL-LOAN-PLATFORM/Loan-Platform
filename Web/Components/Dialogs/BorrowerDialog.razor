@@ -5,10 +5,10 @@
 
 <MudDialog>
     <DialogContent>
-        <MudForm @ref="_form" IsValid="@_success" ValidationDelay="0">
+        <MudForm @ref="_form" @bind-IsValid="_success" ValidationDelay="0">
             <MudGrid>
                 <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="Model.IdentificationNumber" Label="ID Number" Required="true" ReadOnly="IsReadOnly" MaxLength="16" MinLength="16" Validation="@(new Func<string, IEnumerable<string>>(ValidateIdNumber))" />
+                    <MudTextField @bind-Value="Model.IdentificationNumber" Label="ID Number" Required="true" ReadOnly="IsReadOnly" MaxLength="16" Validation="@(new Func<string, IEnumerable<string>>(ValidateIdNumber))" />
                 </MudItem>
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="Model.FirstName" Label="First Name" Required="true" ReadOnly="IsReadOnly" />
