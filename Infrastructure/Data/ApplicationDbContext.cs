@@ -15,6 +15,7 @@ namespace Infrastructure.Data
         public DbSet<GuarantorType> GuarantorTypes => Set<GuarantorType>();
         public DbSet<Borrower> Borrowers => Set<Borrower>();
         public DbSet<Account> Accounts => Set<Account>();
+        public DbSet<LoanProduct> LoanProducts => Set<LoanProduct>();
 
     }
 }
