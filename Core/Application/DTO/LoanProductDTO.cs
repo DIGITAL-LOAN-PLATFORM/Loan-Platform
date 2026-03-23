@@ -19,4 +19,12 @@ namespace Application.DTO
     {
         public int Id { get; set; }
     }
+
+    public class LoanProductDTO
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public decimal InterestRate { get; set; }
+    }
 }

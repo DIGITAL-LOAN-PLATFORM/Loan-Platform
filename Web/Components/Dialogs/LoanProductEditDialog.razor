@@ -1,0 +1,42 @@
+@using Application.DTO
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@Title</MudText>
+        <MudForm @ref="_form">
+            <MudTextField @bind-Value="LoanProduct.Name" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Name is required." Class="mb-3" />
+            <MudTextField @bind-Value="LoanProduct.Description" Label="Description" Variant="Variant.Outlined" Lines="3" Class="mb-3" />
+            <MudNumericField @bind-Value="LoanProduct.InterestRate" Label="Interest Rate (%)" Variant="Variant.Outlined" Required="true" RequiredError="Interest rate is required." HideSpinButtons="true" Min="0" Max="100" Step=".01M" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">Cancel</MudButton>
+        <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = "Edit Loan Product";
+
+    [Parameter]
+    public LoanProductDTO LoanProduct { get; set; } = new();
+
+    private MudForm _form = default!;
+
+    private async Task Save()
+    {
+        await _form.ValidateAsync();
+        if (_form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(LoanProduct));
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

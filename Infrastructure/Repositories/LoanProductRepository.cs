@@ -37,7 +37,6 @@ namespace Infrastructure.Repositories
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.LoanProducts.Add(loanProduct);
             await _context.LoanProducts.AddAsync(loanProduct);
             await _context.SaveChangesAsync();
         }

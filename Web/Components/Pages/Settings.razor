@@ -11,6 +11,7 @@
 @inject IPaymentModalityService PaymentModalityService
 @inject IReasonService ReasonService
 @inject IGuarantorTypeService GuarantorTypeService
+@inject ILoanProductService LoanProductService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -126,7 +127,7 @@
             </MudPaper>
         </MudTabPanel>
 
-        <MudTabPanel Text="LOAN Products">
+        <MudTabPanel Text="Loan Products">
             <MudPaper Class="pa-4">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
                     <MudText Typo="Typo.h6">Loan Products</MudText>
@@ -210,12 +211,12 @@
         await DialogService.ShowAsync<NameDetailsDialog>(title, parameters);
     }
 
-    private async Task<bool> ConfirmDeleteAsync(string itemName)
+    private async Task<bool> ConfirmDeleteAsync(string? itemName)
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Title, "Confirm Delete" },
-            { x => x.Message, $"Delete '{itemName}'?" }
+            { x => x.Message, $"Delete '{(itemName ?? "this item")}'?" }
         };
 
         var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters);
@@ -340,7 +341,8 @@
     {
         var parameters = new DialogParameters<LoanProductEditDialog>
         {
-            { x => x.Title, "Add Loan Product" }
+            { x => x.Title, "Add Loan Product" },
+            { x => x.LoanProduct, new LoanProductDTO() }
         };
 
         var dialog = await DialogService.ShowAsync<LoanProductEditDialog>("Add Loan Product", parameters);
@@ -350,7 +352,12 @@
             return;
         }
 
-        await LoanProductService.CreateLoanProductAsync(dto);
+        await LoanProductService.CreateLoanProductAsync(new CreateLoanProductDTO 
+        { 
+            Name = dto.Name, 
+            Description = dto.Description, 
+            InterestRate = dto.InterestRate 
+        });
         await LoadAllAsync();
         Snackbar.Add("Loan product added.", Severity.Success);
     }
@@ -359,7 +366,7 @@
         var parameters = new DialogParameters<LoanProductEditDialog>
         {
             { x => x.Title, "Edit Loan Product" },
-            { x => x.LoanProduct, new LoanProductDTO { Id = item.Id, Name = item.Name, Description = item.Description, InterestRate = item.InterestRate } }
+            { x => x.LoanProduct, new LoanProductDTO { Id = item.Id, Name = item.Name ?? "", Description = item.Description ?? "", InterestRate = item.InterestRate ?? 0 } }
         };
 
         var dialog = await DialogService.ShowAsync<LoanProductEditDialog>("Edit Loan Product", parameters);
@@ -369,7 +376,13 @@
             return;
         }
 
-        await LoanProductService.UpdateLoanProductAsync(dto);
+        await LoanProductService.UpdateLoanProductAsync(new UpdateLoanProductDTO 
+        { 
+            Id = dto.Id, 
+            Name = dto.Name, 
+            Description = dto.Description, 
+            InterestRate = dto.InterestRate 
+        });
         await LoadAllAsync();
         Snackbar.Add("Loan product updated.", Severity.Success);
     }
@@ -386,9 +399,9 @@
         {
             { x => x.Title, "Loan Product Details" },
             { x => x.Id, item.Id },
-            { x => x.Name, item.Name },
-            { x => x.Description, item.Description },
-            { x => x.InterestRate, item.InterestRate }
+            { x => x.Name, item.Name ?? "" },
+            { x => x.Description, item.Description ?? "" },
+            { x => x.InterestRate, item.InterestRate ?? 0 }
         };
 
         await DialogService.ShowAsync<LoanProductDetailsDialog>("Loan Product Details", parameters);

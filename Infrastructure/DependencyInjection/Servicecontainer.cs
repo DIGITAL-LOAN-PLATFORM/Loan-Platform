@@ -24,6 +24,7 @@ namespace Infrastructure.DependencyInjection
             services.AddScoped<IGuarantorType, GuarantorTypeRepository>();
             services.AddScoped<IBorrower, BorrowerRepository>();
             services.AddScoped<IAccount, AccountRepository>();
+            services.AddScoped<ILoanProduct, LoanProductRepository>();
 
 
             return services;

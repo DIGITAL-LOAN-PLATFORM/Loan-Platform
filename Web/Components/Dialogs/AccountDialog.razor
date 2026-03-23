@@ -7,7 +7,7 @@
 
 <MudDialog>
     <DialogContent>
-        <MudForm @ref="_form" IsValid="@_success" ValidationDelay="0">
+        <MudForm @ref="_form" @bind-IsValid="_success" ValidationDelay="0">
             <MudGrid>
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="Model.Name" Label="Account Name" Required="true" ReadOnly="IsReadOnly" />
