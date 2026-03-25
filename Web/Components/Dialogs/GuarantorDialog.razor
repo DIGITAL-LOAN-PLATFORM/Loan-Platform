@@ -22,11 +22,11 @@
                     <MudTextField @bind-Value="Model.Phone" Label="Phone Number" Required="true" ReadOnly="IsReadOnly" />
                 </MudItem>
                 <MudItem xs="12" md="4">
-                    <MudSelect @bind-Value="_guarantorTypes" Label="Guarantor Type" Required="true">
-                            @foreach (var _guarantorTypes in _guarantorTypes)
-                            {
-                                <MudSelectItem Value="@((int)GuarantorTypeId)">@GuarantorTypeId.ToString()</MudSelectItem>
-                            }
+                    <MudSelect @bind-Value="GuarantorTypeId" Label="Guarantor Type" Required="true">
+                        @foreach (var type in _guarantorTypes)
+                        {
+                            <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                        }
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12" md="6">
@@ -125,7 +125,10 @@
     {
         @* ON OnInitialized of Guarantor types *@
         _guarantorTypes = await GuarantorTypeService.GetAllAsync();
-        
+        if (Model.GuarantorType != null)
+        {
+            GuarantorTypeId = Model.GuarantorType.Id;
+        }
 
         _provinces = await LocationService.GetAllLocationsAsync();
         
@@ -243,6 +246,7 @@
         await _form.ValidateAsync();
         if (_form.IsValid)
         {
+            Model.GuarantorType = _guarantorTypes.FirstOrDefault(t => t.Id == GuarantorTypeId);
             MudDialog.Close(DialogResult.Ok(Model));
         }
     }
