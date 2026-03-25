@@ -14,7 +14,7 @@ namespace Infrastructure.DependencyInjection
         {
             // Add infrastructure services here, e.g., DbContext, Repositories, etc.
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DigitalLoanPlatformConnection")), ServiceLifetime.Scoped
+                options.UseSqlServer(configuration.GetConnectionString("DigitalLoanPlatformConnection"))
             );
 
             // Add repositories
@@ -25,7 +25,7 @@ namespace Infrastructure.DependencyInjection
             services.AddScoped<IBorrower, BorrowerRepository>();
             services.AddScoped<IAccount, AccountRepository>();
             services.AddScoped<ILoanProduct, LoanProductRepository>();
-
+            services.AddScoped<IRequiredDocument, RequiredDocumentRepository>();
 
             return services;
         }

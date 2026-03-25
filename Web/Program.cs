@@ -3,6 +3,8 @@ using Application.Interfaces;
 using Infrastructure.Services;
 using MudBlazor.Services;
 using Infrastructure.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+//Application Services
 using Application.Services.PaymentTypes;
 using Application.Services.PaymentModalities;
 using Application.Services.Reasons;
@@ -10,7 +12,7 @@ using Application.Services.GuarantorTypes;
 using Application.Services.Borrowers;
 using Application.Services.Accounts;
 using Application.Services.LoanProducts;
-using Microsoft.Extensions.FileProviders;
+using Application.Services.RequiredDocuments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,7 @@ builder.Services.AddScoped<IGuarantorTypeService, GuarantorTypeService>();
 builder.Services.AddScoped<IBorrowerService, BorrowerService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ILoanProductService, LoanProductService>();
+builder.Services.AddScoped<IRequiredDocumentService, RequiredDocumentService>();
 
 
 
