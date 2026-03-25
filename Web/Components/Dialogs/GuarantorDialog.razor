@@ -1,0 +1,254 @@
+@using Application.DTO
+@using Application.Interfaces
+@using Application.Services.GuarantorTypes
+@using Domain.Entities
+@inject ILocationService LocationService
+@inject IGuarantorTypeService GuarantorTypeService
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_success" ValidationDelay="0">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.IdentificationNumber" Label="ID Number" Required="true" ReadOnly="IsReadOnly" MaxLength="16" Validation="@(new Func<string, IEnumerable<string>>(ValidateIdNumber))" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.Name" Label="Name" Required="true" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.Email" Label="Email" InputType="InputType.Email" ReadOnly="IsReadOnly" Validation="@(new Func<string, IEnumerable<string>>(ValidateEmail))" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.Phone" Label="Phone Number" Required="true" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect @bind-Value="_guarantorTypes" Label="Guarantor Type" Required="true">
+                            @foreach (var _guarantorTypes in _guarantorTypes)
+                            {
+                                <MudSelectItem Value="@((int)GuarantorTypeId)">@GuarantorTypeId.ToString()</MudSelectItem>
+                            }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker @bind-Date="DobBinding" Label="Date of Birth" ReadOnly="IsReadOnly" />
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" Value="Model.Province" Label="Province" ValueChanged="OnProvinceChanged" ReadOnly="IsReadOnly" Required="true">
+                        @foreach (var p in _provinces)
+                        {
+                            <MudSelectItem Value="@p.Name">@p.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" Value="Model.District" Label="District" ValueChanged="OnDistrictChanged" ReadOnly="IsReadOnly" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Province))">
+                        @foreach (var d in _districts)
+                        {
+                            <MudSelectItem Value="@d.Name">@d.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudSelect T="string" Value="Model.Sector" Label="Sector" ValueChanged="OnSectorChanged" ReadOnly="IsReadOnly" Required="true" Disabled="@(string.IsNullOrEmpty(Model.District))">
+                        @foreach (var s in _sectors)
+                        {
+                            <MudSelectItem Value="@s.Name">@s.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Value="Model.Cell" Label="Cell" ValueChanged="OnCellChanged" ReadOnly="IsReadOnly" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Sector))">
+                        @foreach (var c in _cells)
+                        {
+                            <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Village" @bind-Value="Model.Village" ReadOnly="IsReadOnly" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Cell))">
+                        @foreach (var v in _villages)
+                        {
+                            <MudSelectItem Value="@v.Name">@v.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        @if (IsReadOnly)
+        {
+            <MudButton Color="Color.Primary" OnClick="Cancel">Close</MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" OnClick="Save">Save</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public UpdateGuarantorDTO Model { get; set; } = new();
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+    public int GuarantorTypeId { get; set; }
+    
+    private MudForm _form = default!;
+    private bool _success;
+
+    private List<GuarantorType> _guarantorTypes = new();
+
+    private List<Province> _provinces = new();
+    private List<District> _districts = new();
+    private List<Sector> _sectors = new();
+    private List<Cell> _cells = new();
+    private List<Village> _villages = new();
+
+    
+
+    private DateTime? DobBinding
+    {
+        get => Model.DOB == default ? null : Model.DOB;
+        set => Model.DOB = value ?? default;
+    }
+
+    private async Task GuarantorTypeAsync()
+    {
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        @* ON OnInitialized of Guarantor types *@
+        _guarantorTypes = await GuarantorTypeService.GetAllAsync();
+        
+
+        _provinces = await LocationService.GetAllLocationsAsync();
+        
+        if (!string.IsNullOrEmpty(Model.Province))
+        {
+            var province = _provinces.FirstOrDefault(p => p.Name == Model.Province);
+            if (province != null)
+            {
+                _districts = province.Districts;
+                if (!string.IsNullOrEmpty(Model.District))
+                {
+                    var district = _districts.FirstOrDefault(d => d.Name == Model.District);
+                    if (district != null)
+                    {
+                        _sectors = district.Sectors;
+                        if (!string.IsNullOrEmpty(Model.Sector))
+                        {
+                            var sector = _sectors.FirstOrDefault(s => s.Name == Model.Sector);
+                            if (sector != null)
+                            {
+                                _cells = sector.Cells;
+                                if (!string.IsNullOrEmpty(Model.Cell))
+                                {
+                                    var cell = _cells.FirstOrDefault(c => c.Name == Model.Cell);
+                                    if (cell != null)
+                                    {
+                                        _villages = cell.Villages;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void OnProvinceChanged(string value)
+    {
+        Model.Province = value;
+        Model.District = string.Empty;
+        Model.Sector = string.Empty;
+        Model.Cell = string.Empty;
+        Model.Village = string.Empty;
+        
+        _districts = _provinces.FirstOrDefault(p => p.Name == value)?.Districts ?? new();
+        _sectors = new();
+        _cells = new();
+        _villages = new();
+    }
+
+    private void OnDistrictChanged(string value)
+    {
+        Model.District = value;
+        Model.Sector = string.Empty;
+        Model.Cell = string.Empty;
+        Model.Village = string.Empty;
+
+        _sectors = _districts.FirstOrDefault(d => d.Name == value)?.Sectors ?? new();
+        _cells = new();
+        _villages = new();
+    }
+
+    private void OnSectorChanged(string value)
+    {
+        Model.Sector = value;
+        Model.Cell = string.Empty;
+        Model.Village = string.Empty;
+
+        _cells = _sectors.FirstOrDefault(s => s.Name == value)?.Cells ?? new();
+        _villages = new();
+    }
+
+    private void OnCellChanged(string value)
+    {
+        Model.Cell = value;
+        Model.Village = string.Empty;
+
+        _villages = _cells.FirstOrDefault(c => c.Name == value)?.Villages ?? new();
+    }
+
+    private IEnumerable<string> ValidateIdNumber(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield return "ID Number is required";
+        }
+        else if (value.Length < 16)
+        {
+            yield return "ID Number must be exactly 16 digits";
+        }
+        else if (!value.All(char.IsNumber))
+        {
+            yield return "ID Number must contain only Numeric characters";
+        }
+    }
+
+    private IEnumerable<string> ValidateEmail(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            yield break; // Email is optional
+        }
+
+        // Simple email validation using regex
+        var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+        if (!System.Text.RegularExpressions.Regex.IsMatch(value, emailPattern))
+        {
+            yield return "Please enter a valid email address";
+        }
+    }
+
+    private async Task Save()
+    {
+        await _form.ValidateAsync();
+        if (_form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(Model));
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

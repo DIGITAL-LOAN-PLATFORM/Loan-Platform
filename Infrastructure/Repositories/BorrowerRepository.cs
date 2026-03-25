@@ -44,7 +44,7 @@ namespace Infrastructure.Repositories
 
                 PhoneNumber = createBorrowerDTO.PhoneNumber,
 
-                DOB = createBorrowerDTO.DOB,
+                DOB = createBorrowerDTO.DOB ,
 
                 MaritalStatus = createBorrowerDTO.MaritalStatus,
 

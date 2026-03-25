@@ -4,9 +4,9 @@ namespace Domain.Entities
      public class Guarantor
     {
         public int Id { get; set; }
-        public int IdentificationNumber { get; set; }
+        public string? IdentificationNumber { get; set; }
         public string Name { get; set; } = string.Empty;
-        public DateTime DOB { get; set; }
+        public DateTime? DOB { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
 
