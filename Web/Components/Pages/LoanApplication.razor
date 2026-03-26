@@ -1,0 +1,157 @@
+@page "/loan-applications"
+@using Application.DTO
+@using Domain.Entities
+@using LoanAppEntity = Domain.Entities.LoanApplication
+@using Application.Services.LoanApplications
+@using LoanPlatform.Components.Dialogs
+@inject ILoanApplicationService LoanApplicationService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-6">
+        <MudText Typo="Typo.h4" Color="Color.Primary" Style="font-weight: 700;">Loan Applications</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialogAsync">
+            New Application
+        </MudButton>
+    </MudStack>
+
+    <MudTable Items="_applications" Dense="true" Hover="true" Outlined="true" Elevation="2" Loading="@_loading">
+        <HeaderContent>
+            <MudTh Style="font-weight: bold;">App Number</MudTh>
+            <MudTh Style="font-weight: bold;">Borrower</MudTh>
+            <MudTh Style="font-weight: bold;">Product</MudTh>
+            <MudTh Style="font-weight: bold;">Amount</MudTh>
+            <MudTh Style="font-weight: bold;">Date</MudTh>
+            <MudTh Style="font-weight: bold;">Status</MudTh>
+            <MudTh Style="font-weight: bold;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.ApplicationNumber</MudTd>
+            <MudTd>@($"{context.Borrower?.FirstName} {context.Borrower?.LastName}")</MudTd>
+            <MudTd>@context.loanProduct?.Name</MudTd>
+            <MudTd>@context.RequestedAmount.ToString("C")</MudTd>
+            <MudTd>@context.ApplicationDate.ToShortDateString()</MudTd>
+            <MudTd>
+                <MudChip T="string" Color="@GetStatusColor(context.ApprovalStatus)" Size="Size.Small" Variant="Variant.Filled">
+                    @context.ApprovalStatus
+                </MudChip>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewDetailsAsync(context)" />
+                @if (context.ApprovalStatus == "Pending" || context.ApprovalStatus == "Rejected")
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditApplicationAsync(context)" />
+                }
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteApplicationAsync(context)" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private List<LoanAppEntity> _applications = [];
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        _applications = await LoanApplicationService.GetAllLoanApplicationAsync();
+        _loading = false;
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "Rejected" => Color.Error,
+        "Closed" => Color.Default,
+        _ => Color.Warning
+    };
+
+    private async Task OpenCreateDialogAsync()
+    {
+        var parameters = new DialogParameters<LoanApplicationDialog>
+        {
+            { x => x.Title, "Create Loan Application" },
+            { x => x.Model, new CreateLoanApplicationDTO { ApplicationDate = DateTime.Now } }
+        };
+
+        var dialog = await DialogService.ShowAsync<LoanApplicationDialog>("Create Loan Application", parameters);
+        var result = await dialog.Result;
+        if (result is not null && !result.Canceled)
+        {
+            await LoadDataAsync();
+            Snackbar.Add("Application submitted successfully.", Severity.Success);
+        }
+    }
+
+    private async Task EditApplicationAsync(LoanAppEntity app)
+    {
+        var parameters = new DialogParameters<LoanApplicationDialog>
+        {
+            { x => x.Title, "Edit Loan Application" },
+            { x => x.ApplicationId, app.Id },
+            { x => x.Model, new CreateLoanApplicationDTO 
+                { 
+                    ProductId = app.ProductId, 
+                    BorrowerId = app.BorrowerId, 
+                    ModalityId = app.ModalityId, 
+                    RequestedAmount = app.RequestedAmount, 
+                    Duration = app.Duration, 
+                    Purpose = app.Purpose, 
+                    ApplicationDate = app.ApplicationDate 
+                } 
+            }
+        };
+
+        var dialog = await DialogService.ShowAsync<LoanApplicationDialog>("Edit Loan Application", parameters);
+        var result = await dialog.Result;
+        if (result is not null && !result.Canceled)
+        {
+            await LoadDataAsync();
+            Snackbar.Add("Application updated successfully.", Severity.Success);
+        }
+    }
+
+    private async Task ViewDetailsAsync(LoanAppEntity app)
+    {
+        var parameters = new DialogParameters<LoanApplicationDialog>
+        {
+            { x => x.Title, "Application Details" },
+            { x => x.ApplicationId, app.Id },
+            { x => x.IsReadOnly, true },
+            { x => x.Model, new CreateLoanApplicationDTO 
+                { 
+                    ProductId = app.ProductId, 
+                    BorrowerId = app.BorrowerId, 
+                    ModalityId = app.ModalityId, 
+                    RequestedAmount = app.RequestedAmount, 
+                    Duration = app.Duration, 
+                    Purpose = app.Purpose, 
+                    ApplicationDate = app.ApplicationDate 
+                } 
+            }
+        };
+
+        await DialogService.ShowAsync<LoanApplicationDialog>("Application Details", parameters);
+    }
+
+    private async Task DeleteApplicationAsync(LoanAppEntity app)
+    {
+        var result = await DialogService.ShowMessageBoxAsync("Confirm Delete", $"Are you sure you want to delete application {app.ApplicationNumber}?", "Delete", "Cancel");
+        if (result == true)
+        {
+            await LoanApplicationService.DeleteLoanApplicationAsync(app.Id);
+            await LoadDataAsync();
+            Snackbar.Add("Application deleted.", Severity.Success);
+        }
+    }
+}

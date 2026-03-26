@@ -5,8 +5,11 @@ namespace Domain.Entities
     {
         public int Id { get; set; }
         public int LoanDisbursementId { get; set; }
+        public LoanDisbursement LoanDisbursement { get; set; }
         public decimal PenaltyAmount { get; set; }
-        public string? ConfirmedByUserId { get; set; }
+        public int ReasonId { get; set; }
+        public Reason Reason { get; set; }
+        public string ConfirmedByUserId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
        
     }

@@ -4,29 +4,36 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Application.DTO;
 using Domain.ValueObjects;
+
 namespace Infrastructure.Repositories
-
 {
-
+    //Implementation of IAccount interface
     public class AccountRepository : IAccount
-
     {
+        //Dependency Injection
         private readonly ApplicationDbContext _context;
 
+        //Constructor
         public AccountRepository(ApplicationDbContext context)
         {
             _context = context;
         }
+
+        //Get All
         public async Task<List<Account>> GetAllAsync()
         {
             return await _context.Accounts.ToListAsync();
         }
+
+        //Get By Id
         public async Task<Account> GetByIdAsync(int id)
         {
             var account = await _context.Accounts.FindAsync(id);
 
             return account ?? throw new KeyNotFoundException($"Account with ID {id} was not found.");
         }
+
+        //Create
         public async Task CreateAccountAsync(CreateAccountDTO createAccountDTO)
         {
             var account = new Account
@@ -46,6 +53,7 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        //Update
         public async Task UpdateAccountAsync(UpdateAccountDTO updateAccountDTO)
         {
             var account = await _context.Accounts.FindAsync(updateAccountDTO.Id);
@@ -65,6 +73,7 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        //Delete
         public async Task DeleteAccountAsync(int id)
         {
             var account = await _context.Accounts.FindAsync(id);
