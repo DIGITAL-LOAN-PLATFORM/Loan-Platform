@@ -11,6 +11,7 @@ using Application.Services.Borrowers;
 using Application.Services.Accounts;
 using Application.Services.LoanProducts;
 using Microsoft.Extensions.FileProviders;
+using Application.Services.Guarantors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ builder.Services.AddScoped<IPaymentTypeService, PaymentTypeService>();
 builder.Services.AddScoped<IPaymentModalityService, PaymentModalityService>();
 builder.Services.AddScoped<IReasonService, ReasonService>();
 builder.Services.AddScoped<IGuarantorTypeService, GuarantorTypeService>();
+builder.Services.AddScoped<IGuarantorService, GuarantorService>();
 builder.Services.AddScoped<IBorrowerService, BorrowerService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ILoanProductService, LoanProductService>();
