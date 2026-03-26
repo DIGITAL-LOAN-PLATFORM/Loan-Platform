@@ -26,6 +26,7 @@ namespace Infrastructure.DependencyInjection
             services.AddScoped<IAccount, AccountRepository>();
             services.AddScoped<ILoanProduct, LoanProductRepository>();
             services.AddScoped<IRequiredDocument, RequiredDocumentRepository>();
+            services.AddScoped<ILoanApplication, LoanApplicationRepository>();
 
             return services;
         }

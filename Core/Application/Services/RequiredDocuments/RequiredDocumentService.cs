@@ -15,31 +15,31 @@ namespace Application.Services.RequiredDocuments
             _requiredDocument = requiredDocument;
         }
 
-        //Create
+        //CreateRequiredDocumentAsync
         public async Task CreateRequiredDocumentAsync(CreateRequiredDocumentDTO createRequiredDocumentDTO)
         {
             await _requiredDocument.CreateRequiredDocumentAsync(createRequiredDocumentDTO);
         }
 
-        //Update
+        //UpdateRequiredDocumentAsync
         public async Task UpdateRequiredDocumentAsync(UpdateRequiredDocumentDTO updateRequiredDocumentDTO)
         {
             await _requiredDocument.UpdateRequiredDocumentAsync(updateRequiredDocumentDTO);
         }
 
-        //Delete
+        //DeleteRequiredDocumentAsync
         public async Task DeleteRequiredDocumentAsync(int id)
         {
             await _requiredDocument.DeleteRequiredDocumentAsync(id);
         }
 
-        //Get By Id 
+        //GetRequiredDocumentByIdAsync
         public async Task<RequiredDocument> GetRequiredDocumentByIdAsync(int id)
         {
             return await _requiredDocument.GetRequiredDocumentByIdAsync(id);
         }
 
-        //Get All
+        //GetAllRequiredDocumentsAsync
         public async Task<List<RequiredDocument>> GetAllRequiredDocumentsAsync()
         {
             return await _requiredDocument.GetAllRequiredDocumentsAsync();

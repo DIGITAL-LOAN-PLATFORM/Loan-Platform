@@ -17,6 +17,7 @@ namespace Infrastructure.Data
         public DbSet<Account> Accounts => Set<Account>();
         public DbSet<LoanProduct> LoanProducts => Set<LoanProduct>();
         public DbSet<RequiredDocument> RequiredDocuments => Set<RequiredDocument>();
+        public DbSet<LoanApplication> LoanApplications => Set<LoanApplication>();
 
     }
 }

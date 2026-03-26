@@ -20,7 +20,7 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        //Create
+        //CreateRequiredDocumentAsync
         public async Task CreateRequiredDocumentAsync(CreateRequiredDocumentDTO createRequiredDocumentDTO)
         {
             var requiredDocument = new RequiredDocument
@@ -34,7 +34,7 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        //Update
+        //UpdateRequiredDocumentAsync
         public async Task UpdateRequiredDocumentAsync(UpdateRequiredDocumentDTO updateRequiredDocumentDTO)
         {
             var requiredDocument = await _context.RequiredDocuments.FindAsync(updateRequiredDocumentDTO.Id);
@@ -48,7 +48,7 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();  
         }
 
-        //Delete
+        //DeleteRequiredDocumentAsync
         public async Task DeleteRequiredDocumentAsync(int id)
         {
             var requiredDocument = await _context.RequiredDocuments.FindAsync(id);
@@ -60,7 +60,7 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();  
         }
 
-        //Get By Id
+        //GetRequiredDocumentByIdAsync
         public async Task<RequiredDocument> GetRequiredDocumentByIdAsync(int id)
         {
             var requiredDocument = await _context.RequiredDocuments.FindAsync(id);
@@ -71,7 +71,7 @@ namespace Infrastructure.Repositories
             return requiredDocument;
         }
 
-        //Get All
+        //GetAllRequiredDocumentsAsync
         public async Task<List<RequiredDocument>> GetAllRequiredDocumentsAsync()
         {
             return await _context.RequiredDocuments.ToListAsync();

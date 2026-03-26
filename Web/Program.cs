@@ -13,6 +13,7 @@ using Application.Services.Borrowers;
 using Application.Services.Accounts;
 using Application.Services.LoanProducts;
 using Application.Services.RequiredDocuments;
+using Application.Services.LoanApplications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,7 @@ builder.Services.AddScoped<IBorrowerService, BorrowerService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ILoanProductService, LoanProductService>();
 builder.Services.AddScoped<IRequiredDocumentService, RequiredDocumentService>();
+builder.Services.AddScoped<ILoanApplicationService, LoanApplicationService>();
 
 
 

@@ -1,0 +1,280 @@
+@using Application.DTO
+@using Domain.Entities
+@using Application.Interfaces
+@using Application.Services.Borrowers
+@using Application.Services.LoanProducts
+@using Application.Services.PaymentModalities
+@using Application.Services.LoanApplications
+@using Application.Services.RequiredDocuments
+@inject IBorrowerService BorrowerService
+@inject ILoanProductService LoanProductService
+@inject IPaymentModalityService PaymentModalityService
+@inject ILoanApplicationService LoanApplicationService
+@inject IRequiredDocumentService RequiredDocumentService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_success" ValidationDelay="0">
+            <MudGrid>
+                @if (IsReadOnly)
+                {
+                    var b = _borrowers.FirstOrDefault(x => x.Id == Model.BorrowerId);
+                    var p = _loanProducts.FirstOrDefault(x => x.Id == Model.ProductId);
+                    <MudItem xs="12">
+                        <MudCard Outlined="true" Class="mb-3">
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6">Borrower Details</MudText>
+                                <MudText>Name: @($"{b?.FirstName} {b?.LastName}")</MudText>
+                                <MudText>Phone: @b?.PhoneNumber</MudText>
+                                <MudText>Email: @b?.Email</MudText>
+                                <MudText>Location: @($"{b?.Province}, {b?.District}, {b?.Sector}")</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                        <MudCard Outlined="true">
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6">Loan Product Info</MudText>
+                                <MudText>Product: @p?.Name</MudText>
+                                <MudText>Interest Rate: @p?.InterestRate%</MudText>
+                                <MudText>Description: @p?.Description</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12" md="6">
+                        <MudSelect @bind-Value="Model.BorrowerId" Label="Borrower" Required="true" ReadOnly="IsReadOnly">
+                            @foreach (var borrower in _borrowers)
+                            {
+                                <MudSelectItem Value="@borrower.Id">@($"{borrower.FirstName} {borrower.LastName}")</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int" Value="Model.ProductId" ValueChanged="OnProductChangedAsync" Label="Loan Product" Required="true" ReadOnly="IsReadOnly">
+                            @foreach (var product in _loanProducts)
+                            {
+                                <MudSelectItem Value="@product.Id">@product.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+                <MudItem xs="12" md="6">
+                    <MudSelect @bind-Value="Model.ModalityId" Label="Payment Modality" Required="true" ReadOnly="IsReadOnly">
+                        @foreach (var modality in _modalities)
+                        {
+                            <MudSelectItem Value="@modality.Id">@modality.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="Model.RequestedAmount" Label="Requested Amount" Format="N2" Required="true" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="Model.Duration" Label="Duration (Months)" Required="true" ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.Purpose" Label="Purpose" Lines="3" ReadOnly="IsReadOnly" />
+                </MudItem>
+
+                @if (!IsReadOnly && _requiredDocuments.Any())
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle1" Class="mt-4">Required Documents</MudText>
+                    </MudItem>
+                    @foreach (var reqDoc in _requiredDocuments)
+                    {
+                        <MudItem xs="12" md="6">
+                            <MudText Typo="Typo.body1" Style="font-weight: 500;">@reqDoc.DocumentName</MudText>
+                            <MudFileUpload T="IBrowserFile" FilesChanged="(file) => OnFileUploaded(reqDoc.Id, file)">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="mt-1">
+                                        Select File
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                            @if (_uploadedFiles.ContainsKey(reqDoc.Id))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Success">Uploaded: @_uploadedFiles[reqDoc.Id].Name</MudText>
+                            }
+                        </MudItem>
+                    }
+                }
+                @if (IsReadOnly && _providedDocuments.Any())
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle1" Class="mt-4">Uploaded Documents</MudText>
+                        <MudStack Spacing="2">
+                            @foreach (var doc in _providedDocuments)
+                            {
+                                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AttachFile" Href="@doc.DocumentFile" Target="_blank">
+                                    @doc.DocumentName
+                                </MudButton>
+                            }
+                        </MudStack>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        @if (!IsReadOnly)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">Save</MudButton>
+        }
+        else if (_approvalStatus == "Pending")
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="ApproveAsync">Approve</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="RejectAsync" Class="ml-2">Reject</MudButton>
+        }
+        <MudButton Variant="Variant.Outlined" OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string Title { get; set; } = "Loan Application";
+    [Parameter] public CreateLoanApplicationDTO Model { get; set; } = new();
+    [Parameter] public int ApplicationId { get; set; } = 0;
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+    private MudForm _form = default!;
+    private bool _success;
+
+    private List<Borrower> _borrowers = [];
+    private List<LoanProduct> _loanProducts = [];
+    private List<PaymentModality> _modalities = [];
+    private List<RequiredDocument> _requiredDocuments = [];
+    private Dictionary<int, IBrowserFile> _uploadedFiles = new();
+    private List<ProvidedDocument> _providedDocuments = [];
+    private string _approvalStatus = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _borrowers = await BorrowerService.GetAllAsync();
+        _loanProducts = await LoanProductService.GetAllAsync();
+        _modalities = await PaymentModalityService.GetAllAsync();
+
+        if (ApplicationId != 0)
+        {
+            var app = await LoanApplicationService.GetLoanApplicationByIdAsync(ApplicationId);
+            if (app != null)
+            {
+                _providedDocuments = app.ProvidedDocuments ?? new List<ProvidedDocument>();
+                _approvalStatus = app.ApprovalStatus;
+            }
+        }
+        else if (Model.ProductId != 0)
+        {
+            await LoadRequiredDocumentsAsync(Model.ProductId);
+        }
+    }
+
+    private async Task OnProductChangedAsync(int productId)
+    {
+        Model.ProductId = productId;
+        await LoadRequiredDocumentsAsync(productId);
+    }
+
+    private async Task LoadRequiredDocumentsAsync(int productId)
+    {
+        _requiredDocuments = (await RequiredDocumentService.GetAllRequiredDocumentsAsync())
+            .Where(r => r.LoanProductId == productId).ToList();
+        _uploadedFiles.Clear();
+    }
+
+    private void OnFileUploaded(int reqDocId, IBrowserFile file)
+    {
+        if (file != null)
+        {
+            _uploadedFiles[reqDocId] = file;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        await _form.ValidateAsync();
+
+        if (!IsReadOnly && _requiredDocuments.Any() && _uploadedFiles.Count < _requiredDocuments.Count)
+        {
+            Snackbar.Add("Please upload all required documents.", Severity.Warning);
+            return;
+        }
+
+        if (!_form.IsValid)
+        {
+            Snackbar.Add("Please fill all required fields. Some fields are invalid.", Severity.Error);
+            var errors = string.Join(", ", _form.Errors);
+            Console.WriteLine($"Form Errors: {errors}");
+            return;
+        }
+
+        try
+        {
+            Model.ProvidedDocuments = new List<DocumentUploadDTO>();
+            foreach(var kvp in _uploadedFiles)
+            {
+                var reqDoc = _requiredDocuments.First(r => r.Id == kvp.Key);
+                // Important: Blazor Server uses a stream, limiting to 10MB
+                using var stream = kvp.Value.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                using var ms = new System.IO.MemoryStream();
+                await stream.CopyToAsync(ms);
+                
+                Model.ProvidedDocuments.Add(new DocumentUploadDTO 
+                {
+                    DocumentName = reqDoc.DocumentName,
+                    FileName = kvp.Value.Name,
+                    Base64Content = Convert.ToBase64String(ms.ToArray())
+                });
+            }
+
+            if (ApplicationId == 0)
+            {
+                await LoanApplicationService.CreateLoanApplicationAsync(Model);
+            }
+            else
+            {
+                var updateDto = new UpdateLoanApplicationDTO
+                {
+                    Id = ApplicationId,
+                    ProductId = Model.ProductId,
+                    BorrowerId = Model.BorrowerId,
+                    ModalityId = Model.ModalityId,
+                    RequestedAmount = Model.RequestedAmount,
+                    Duration = Model.Duration,
+                    Purpose = Model.Purpose,
+                    ApplicationDate = Model.ApplicationDate,
+                    ProvidedDocuments = Model.ProvidedDocuments
+                };
+                await LoanApplicationService.UpdateLoanApplicationAsync(updateDto);
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving application: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Save Exception: {ex}");
+        }
+    }
+
+    private async Task ApproveAsync()
+    {
+        await LoanApplicationService.ApproveLoanApplicationAsync(ApplicationId);
+        Snackbar.Add("Application approved.", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private async Task RejectAsync()
+    {
+        await LoanApplicationService.RejectLoanApplicationAsync(ApplicationId);
+        Snackbar.Add("Application rejected.", Severity.Error);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Close() { MudDialog.Cancel(); }
+}
