@@ -1,0 +1,165 @@
+@page "/guarantors"
+@using Application.DTO
+@using Application.Interfaces
+@using Application.Services.Guarantors
+@using Domain.Entities
+@using LoanPlatform.Components.Dialogs
+@inject IGuarantorService GuarantorService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+    <MudText Typo="Typo.h4" Class="mb-4">Guarantors</MudText>
+
+    <MudPaper Class="pa-4">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudText Typo="Typo.h6">Guarantors List</MudText>
+            <MudButton OnClick="AddGuarantorAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                Add
+            </MudButton>
+        </MudStack>
+        <MudTable Items="_guarantors" Dense="true" Hover="true" Outlined="true">
+            <HeaderContent>
+                <MudTh>ID NUMBER</MudTh>
+                <MudTh>NAME</MudTh>
+                <MudTh>EMAIL</MudTh>
+                <MudTh>PHONE</MudTh>
+                <MudTh>GUARANTORTYPE</MudTh>
+                <MudTh>ADDRESS</MudTh>
+                <MudTh>ACTIONS</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.IdentificationNumber</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Email</MudTd>
+                <MudTd>@context.Phone</MudTd>
+                <MudTd>@($"{context.Province}, {context.District}")</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewGuarantorAsync(context)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditGuarantorAsync(context)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteGuarantorAsync(context)" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<Domain.Entities.Guarantor> _guarantors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _guarantors = await GuarantorService.GetAllAsync();
+    }
+
+    private async Task AddGuarantorAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Model", new UpdateGuarantorDTO() }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<GuarantorDialog>("Add Guarantor", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is UpdateGuarantorDTO dto)
+        {
+            var createDto = new CreateGuarantorDTO
+            {
+                IdentificationNumber = dto.IdentificationNumber,
+                Name = dto.Name,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                DOB = dto.DOB ,
+                Province = dto.Province,
+                District = dto.District,
+                Sector = dto.Sector,
+                Cell = dto.Cell,
+                Village = dto.Village
+            };
+            
+            await GuarantorService.CreateGuarantorAsync(createDto);
+            await OnInitializedAsync();
+            Snackbar.Add("Guarantor created successfully", Severity.Success);
+        }
+    }
+
+    private async Task EditGuarantorAsync(Domain.Entities.Guarantor guarantor)
+    {
+        var dto = new UpdateGuarantorDTO
+        {
+            Id = guarantor.Id,
+            IdentificationNumber = guarantor.IdentificationNumber ?? "",
+            Name = guarantor.Name ?? "",
+            Email = guarantor.Email ?? "",
+            Phone = guarantor.Phone ?? "",
+            DOB = guarantor.DOB ?? default ,
+            Province = guarantor.Province ?? "",
+            District = guarantor.District ?? "",
+            Sector = guarantor.Sector ?? "",
+            Cell = guarantor.Cell ?? "",
+            Village = guarantor.Village ?? ""
+        };
+
+        var parameters = new DialogParameters
+        {
+            { "Model", dto }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<GuarantorDialog>("Edit Guarantor", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled && result.Data is UpdateGuarantorDTO updatedDto)
+        {
+            await GuarantorService.UpdateGuarantorAsync(updatedDto);
+            await OnInitializedAsync();
+            Snackbar.Add("Guarantor updated successfully", Severity.Success);
+        }
+    }
+
+    private async Task ViewGuarantorAsync(Domain.Entities.Guarantor guarantor)
+    {
+        var dto = new UpdateGuarantorDTO
+        {
+            Id = guarantor.Id,
+            IdentificationNumber = guarantor.IdentificationNumber ?? "" ,
+            Name = guarantor.Name ?? "",
+            Email = guarantor.Email ?? "",
+            Phone = guarantor.Phone ?? "",
+            DOB = guarantor.DOB ?? default  ,
+            Province = guarantor.Province ?? "",
+            District = guarantor.District ?? "",
+            Sector = guarantor.Sector ?? "",
+            Cell = guarantor.Cell ?? "",
+            Village = guarantor.Village ?? ""
+        };
+
+        var parameters = new DialogParameters
+        {
+            { "Model", dto },
+            { "IsReadOnly", true }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<GuarantorDialog>("View Guarantor", parameters, options);
+        await dialog.Result;
+    }
+
+    private async Task DeleteGuarantorAsync(Domain.Entities.Guarantor guarantor)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", "Confirm Delete" },
+            { "Message", $"Are you sure you want to delete {guarantor.Name}?" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            await GuarantorService.DeleteGuarantorAsync(guarantor.Id);
+            await OnInitializedAsync();
+            Snackbar.Add("Guarantor deleted successfully", Severity.Success);
+        }
+    }
+}
