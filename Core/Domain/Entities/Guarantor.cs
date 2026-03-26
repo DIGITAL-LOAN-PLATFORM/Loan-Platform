@@ -16,9 +16,7 @@ namespace Domain.Entities
         public string Sector { get; set; } = string.Empty;
         public string Cell { get; set; } = string.Empty;
         public string Village { get; set; } = string.Empty;
-
-        public int LoanApplicationId { get; set; }
-        public LoanApplication? LoanApplication { get; set; }
+        
         public GuarantorType? GuarantorType { get; set; }
     }
 }
