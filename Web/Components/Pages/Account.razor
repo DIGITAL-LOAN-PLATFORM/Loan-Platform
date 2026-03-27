@@ -33,7 +33,7 @@
                 <MudTd>@context.Provider</MudTd>
                 <MudTd>@context.Number</MudTd>
                 <MudTd>@context.Type.ToString()</MudTd>
-                <MudTd>@(context.Balance?.ToString("C") ?? "N/A")</MudTd>
+                <MudTd>@context.Balance.ToString("C")</MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="@((e) => ViewAccountAsync(context))" />
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => EditAccountAsync(context))" />
@@ -77,11 +77,11 @@
         {
             { "Model", new CreateAccountDTO
                 {
-                    Name = account.Name ?? string.Empty,
-                    Provider = account.Provider ?? string.Empty,
-                    Number = account.Number ?? string.Empty,
-                    Type = (int?)account.Type ?? 0,
-                    Balance = account.Balance ?? 0
+                    Name = account.Name,
+                    Provider = account.Provider,
+                    Number = account.Number,
+                    Type = (int)account.Type,
+                    Balance = account.Balance
                 }
             },
             { "IsReadOnly", true }
@@ -98,11 +98,11 @@
         {
             { "Model", new CreateAccountDTO
                 {
-                    Name = account.Name ?? string.Empty,
-                    Provider = account.Provider ?? string.Empty,
-                    Number = account.Number ?? string.Empty,
-                    Type = (int?)account.Type ?? 0,
-                    Balance = account.Balance ?? 0
+                    Name = account.Name,
+                    Provider = account.Provider,
+                    Number = account.Number,
+                    Type = (int)account.Type,
+                    Balance = account.Balance
                 }
             },
             { "AccountId", account.Id },

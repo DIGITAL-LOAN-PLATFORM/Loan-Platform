@@ -5,6 +5,7 @@
 @using Application.Services.PaymentTypes
 @using Application.Services.Reasons
 @using Application.Services.LoanProducts
+@using Application.Services.RequiredDocuments
 @using Domain.Entities
 @using LoanPlatform.Components.Dialogs
 @inject IPaymentTypeService PaymentTypeService
@@ -12,6 +13,7 @@
 @inject IReasonService ReasonService
 @inject IGuarantorTypeService GuarantorTypeService
 @inject ILoanProductService LoanProductService
+@inject IRequiredDocumentService RequiredDocumentService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -19,6 +21,7 @@
     <MudText Typo="Typo.h4" Class="mb-4">Settings</MudText>
 
     <MudTabs Rounded="true" Elevation="1">
+    <!-- PAYMENT TYPES -->
         <MudTabPanel Text="Payment Types">
             <MudPaper Class="pa-4">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
@@ -45,6 +48,8 @@
                 </MudTable>
             </MudPaper>
         </MudTabPanel>
+
+        <!-- PAYMENT MODALITIES -->
 
         <MudTabPanel Text="Payment Modalities">
             <MudPaper Class="pa-4">
@@ -73,6 +78,8 @@
             </MudPaper>
         </MudTabPanel>
 
+        <!-- PENALTIES REASONS -->
+
         <MudTabPanel Text="Reasons">
             <MudPaper Class="pa-4">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
@@ -100,6 +107,8 @@
             </MudPaper>
         </MudTabPanel>
 
+        <!-- GUARANTOR TYPES -->
+
         <MudTabPanel Text="Guarantor Types">
             <MudPaper Class="pa-4">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
@@ -126,6 +135,8 @@
                 </MudTable>
             </MudPaper>
         </MudTabPanel>
+
+        <!-- LOAN PRODUCTS -->
 
         <MudTabPanel Text="Loan Products">
             <MudPaper Class="pa-4">
@@ -157,20 +168,61 @@
                 </MudTable>
             </MudPaper>
         </MudTabPanel>
+
+        <!-- REQUIRED DOCUMENTS -->
+
+        <MudTabPanel Text="Required Documents">
+            <MudPaper Class="pa-4">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h6">Required Documents</MudText>
+                    <MudButton OnClick="AddRequiredDocumentAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                        Add
+                    </MudButton>
+                </MudStack>
+                <MudTable Items="_requiredDocuments" Dense="true" Hover="true" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Loan Product Id</MudTh>
+                        <MudTh>Document Name</MudTh>
+                        <MudTh>Document Type</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.LoanProductId</MudTd>
+                        <MudTd>@context.DocumentName</MudTd>
+                        <MudTd>@context.DocumentType</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewRequiredDocumentAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditRequiredDocumentAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteRequiredDocumentAsync(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudTabPanel>
     </MudTabs>
 </MudContainer>
 
 @code {
+    // Payment Types
     private List<PaymentType> _paymentTypes = [];
+    // Payment Modalities
     private List<PaymentModality> _paymentModalities = [];
+    // Reasons
     private List<Reason> _reasons = [];
+    // Guarantor Types
     private List<GuarantorType> _guarantorTypes = [];
+    // Loan Products
     private List<LoanProduct> _loanProducts = [];
+    // Required Documents
+    private List<RequiredDocument> _requiredDocuments = [];
+
 
     protected override async Task OnInitializedAsync()
     {
         await LoadAllAsync();
     }
+
+    // Load All
 
     private async Task LoadAllAsync()
     {
@@ -179,6 +231,7 @@
         _reasons = await ReasonService.GetAllAsync();
         _guarantorTypes = await GuarantorTypeService.GetAllAsync();
         _loanProducts = await LoanProductService.GetAllAsync();
+        _requiredDocuments = await RequiredDocumentService.GetAllRequiredDocumentsAsync();
     }
 
     private async Task<string?> OpenNameDialogAsync(string title, string currentName = "")
@@ -361,6 +414,7 @@
         await LoadAllAsync();
         Snackbar.Add("Loan product added.", Severity.Success);
     }
+
     private async Task EditLoanProductAsync(LoanProduct item)
     {
         var parameters = new DialogParameters<LoanProductEditDialog>
@@ -386,6 +440,7 @@
         await LoadAllAsync();
         Snackbar.Add("Loan product updated.", Severity.Success);
     }
+
     private async Task DeleteLoanProductAsync(LoanProduct item)
     {
         if (!await ConfirmDeleteAsync(item.Name)) return;
@@ -393,6 +448,7 @@
         await LoadAllAsync();
         Snackbar.Add("Loan product deleted.", Severity.Success);
     }
+
     private async Task ViewLoanProductAsync(LoanProduct item)
     {
         var parameters = new DialogParameters<LoanProductDetailsDialog>
@@ -406,5 +462,81 @@
 
         await DialogService.ShowAsync<LoanProductDetailsDialog>("Loan Product Details", parameters);
     }
-    
+
+    <!-- Required Documents -->
+    private async Task AddRequiredDocumentAsync()
+    {
+        var parameters = new DialogParameters<RequiredDocumentDialog>
+        {
+            { x => x.Title, "Add Required Document" },
+            { x => x.Model, new CreateRequiredDocumentDTO() }
+        };
+
+        var dialog = await DialogService.ShowAsync<RequiredDocumentDialog>("Add Required Document", parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled)
+        {
+            return;
+        }
+
+        await LoadAllAsync();
+        Snackbar.Add("Required document added.", Severity.Success);
+    }
+
+    private async Task EditRequiredDocumentAsync(RequiredDocument item)
+    {
+        var parameters = new DialogParameters<RequiredDocumentDialog>
+        {
+            { x => x.Title, "Edit Required Document" },
+            { x => x.RequiredDocumentId, item.Id },
+            { x => x.Model, new CreateRequiredDocumentDTO 
+                { 
+                    DocumentName = item.DocumentName ?? "", 
+                    DocumentType = item.DocumentType.ToString(), 
+                    LoanProductId = item.LoanProductId 
+                } 
+            }
+        };
+
+        var dialog = await DialogService.ShowAsync<RequiredDocumentDialog>("Edit Required Document", parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled)
+        {
+            return;
+        }
+
+        await LoadAllAsync();
+        Snackbar.Add("Required document updated.", Severity.Success);
+    }
+
+    private async Task DeleteRequiredDocumentAsync(RequiredDocument item)
+    {
+        if (!await ConfirmDeleteAsync(item.DocumentName))
+        {
+            return;
+        }
+
+        await RequiredDocumentService.DeleteRequiredDocumentAsync(item.Id);
+        await LoadAllAsync();
+        Snackbar.Add("Required document deleted.", Severity.Success);
+    }
+
+    private async Task ViewRequiredDocumentAsync(RequiredDocument item)
+    {
+        var parameters = new DialogParameters<RequiredDocumentDialog>
+        {
+            { x => x.Title, "Required Document Details" },
+            { x => x.RequiredDocumentId, item.Id },
+            { x => x.IsReadOnly, true },
+            { x => x.Model, new CreateRequiredDocumentDTO 
+                { 
+                    DocumentName = item.DocumentName ?? "", 
+                    DocumentType = item.DocumentType.ToString(), 
+                    LoanProductId = item.LoanProductId 
+                } 
+            }
+        };
+
+        await DialogService.ShowAsync<RequiredDocumentDialog>("Required Document Details", parameters);
+    }
 }
