@@ -14,8 +14,10 @@ using Application.Services.Accounts;
 using Application.Services.LoanProducts;
 using Application.Services.RequiredDocuments;
 using Application.Services.LoanApplications;
-using Microsoft.Extensions.FileProviders;
+using Application.Services.LoanDisbursments;
 using Application.Services.Guarantors;
+using Application.Services.LoanInstallments;
+using Application.Services.LoanPayments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,12 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ILoanProductService, LoanProductService>();
 builder.Services.AddScoped<IRequiredDocumentService, RequiredDocumentService>();
 builder.Services.AddScoped<ILoanApplicationService, LoanApplicationService>();
+builder.Services.AddScoped<ILoanDisbursmentService, LoanDisbursmentServices>();
+builder.Services.AddScoped<ILoanInstallmentService, LoanInstallmentService>();
+builder.Services.AddScoped<ILoanPaymentService, LoanPaymentService>();
+
+// Register Background Service for Daily Tracking
+builder.Services.AddHostedService<Web.Services.DailyLoanTrackingService>();
 
 
 

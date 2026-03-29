@@ -22,6 +22,7 @@
             <MudTh Style="font-weight: bold;">Borrower</MudTh>
             <MudTh Style="font-weight: bold;">Product</MudTh>
             <MudTh Style="font-weight: bold;">Amount</MudTh>
+            <MudTh Style="font-weight: bold;">Interest Rate</MudTh>
             <MudTh Style="font-weight: bold;">Date</MudTh>
             <MudTh Style="font-weight: bold;">Status</MudTh>
             <MudTh Style="font-weight: bold;">Actions</MudTh>
@@ -31,6 +32,7 @@
             <MudTd>@($"{context.Borrower?.FirstName} {context.Borrower?.LastName}")</MudTd>
             <MudTd>@context.loanProduct?.Name</MudTd>
             <MudTd>@context.RequestedAmount.ToString("C")</MudTd>
+            <MudTd>@context.InterestRate.ToString("F2")%</MudTd>
             <MudTd>@context.ApplicationDate.ToShortDateString()</MudTd>
             <MudTd>
                 <MudChip T="string" Color="@GetStatusColor(context.ApprovalStatus)" Size="Size.Small" Variant="Variant.Filled">
@@ -95,6 +97,22 @@
 
     private async Task EditApplicationAsync(LoanAppEntity app)
     {
+        var g = app.Guarantors?.FirstOrDefault();
+        var guarantorDto = g != null ? new CreateGuarantorDTO
+        {
+            IdentificationNumber = g.IdentificationNumber ?? string.Empty,
+            Name = g.Name ?? string.Empty,
+            DOB = g.DOB ?? default,
+            Email = g.Email ?? string.Empty,
+            Phone = g.Phone ?? string.Empty,
+            GuarantorType = g.GuarantorType,
+            Province = g.Province ?? string.Empty,
+            District = g.District ?? string.Empty,
+            Sector = g.Sector ?? string.Empty,
+            Cell = g.Cell ?? string.Empty,
+            Village = g.Village ?? string.Empty
+        } : new();
+
         var parameters = new DialogParameters<LoanApplicationDialog>
         {
             { x => x.Title, "Edit Loan Application" },
@@ -105,9 +123,11 @@
                     BorrowerId = app.BorrowerId, 
                     ModalityId = app.ModalityId, 
                     RequestedAmount = app.RequestedAmount, 
+                    InterestRate = app.InterestRate,
                     Duration = app.Duration, 
                     Purpose = app.Purpose, 
-                    ApplicationDate = app.ApplicationDate 
+                    ApplicationDate = app.ApplicationDate,
+                    Guarantor = guarantorDto
                 } 
             }
         };
@@ -123,6 +143,22 @@
 
     private async Task ViewDetailsAsync(LoanAppEntity app)
     {
+        var g = app.Guarantors?.FirstOrDefault();
+        var guarantorDto = g != null ? new CreateGuarantorDTO
+        {
+            IdentificationNumber = g.IdentificationNumber ?? string.Empty,
+            Name = g.Name ?? string.Empty,
+            DOB = g.DOB ?? default,
+            Email = g.Email ?? string.Empty,
+            Phone = g.Phone ?? string.Empty,
+            GuarantorType = g.GuarantorType,
+            Province = g.Province ?? string.Empty,
+            District = g.District ?? string.Empty,
+            Sector = g.Sector ?? string.Empty,
+            Cell = g.Cell ?? string.Empty,
+            Village = g.Village ?? string.Empty
+        } : new();
+
         var parameters = new DialogParameters<LoanApplicationDialog>
         {
             { x => x.Title, "Application Details" },
@@ -134,9 +170,11 @@
                     BorrowerId = app.BorrowerId, 
                     ModalityId = app.ModalityId, 
                     RequestedAmount = app.RequestedAmount, 
+                    InterestRate = app.InterestRate,
                     Duration = app.Duration, 
                     Purpose = app.Purpose, 
-                    ApplicationDate = app.ApplicationDate 
+                    ApplicationDate = app.ApplicationDate,
+                    Guarantor = guarantorDto
                 } 
             }
         };

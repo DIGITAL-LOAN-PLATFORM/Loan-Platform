@@ -1,0 +1,172 @@
+@page "/loan-payments"
+@using Application.DTO
+@using Domain.Entities
+@using Application.Services.LoanInstallments
+@using Application.Services.LoanPayments
+@using LoanPlatform.Components.Dialogs
+@inject ILoanInstallmentService LoanInstallmentService
+@inject ILoanPaymentService LoanPaymentService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<PageTitle>Loan Payments & Installments</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+    <MudStack Spacing="3">
+        <MudText Typo="Typo.h4" Class="font-weight-bold">Loan Payments</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary">Track due installments and process loan payments.</MudText>
+
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6" md="4">
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search Borrower or Application" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="250"
+                                  OnDebounceIntervalElapsed="OnSearchChanged" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="4">
+                    <MudSelect T="string" Label="Status Filter" ValueChanged="OnFilterChanged">
+                        <MudSelectItem Value="@("All")">All Installments</MudSelectItem>
+                        <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+                        <MudSelectItem Value="@("Partial")">Partial</MudSelectItem>
+                        <MudSelectItem Value="@("Paid")">Paid</MudSelectItem>
+                        <MudSelectItem Value="@("Overdue")">Overdue</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudPaper Elevation="2">
+            <MudTable Items="@_filteredInstallments" Hover="true" Dense="false" Bordered="true" Striped="true"
+                      Loading="@_isLoading" LoadingProgressColor="Color.Primary">
+                <HeaderContent>
+                    <MudTh>Borrower</MudTh>
+                    <MudTh>Disbursement ID</MudTh>
+                    <MudTh>Due Date</MudTh>
+                    <MudTh>Amount Due</MudTh>
+                    <MudTh>Penalty</MudTh>
+                    <MudTh>Total Due</MudTh>
+                    <MudTh>Amount Paid</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Borrower">@($"{context.LoanDisbursment?.LoanApplication?.Borrower?.FirstName} {context.LoanDisbursment?.LoanApplication?.Borrower?.LastName}")</MudTd>
+                    <MudTd DataLabel="Disbursement ID">@context.LoanDisbursmentId</MudTd>
+                    <MudTd DataLabel="Due Date">@context.DueDate.ToShortDateString()</MudTd>
+                    <MudTd DataLabel="Amount Due">@context.AmountDue.ToString("C")</MudTd>
+                    <MudTd DataLabel="Penalty">@context.PenaltyAmount.ToString("C")</MudTd>
+                    <MudTd DataLabel="Total Due">@((context.AmountDue + context.PenaltyAmount).ToString("C"))</MudTd>
+                    <MudTd DataLabel="Amount Paid">@context.AmountPaid.ToString("C")</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Color="GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="@(context.Status == "Paid")" OnClick="@(() => OpenPaymentDialogAsync(context))">Process Payment</MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No installments found.</MudText>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText>Loading installments...</MudText>
+                </LoadingContent>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudPaper>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private List<LoanInstallment> _allInstallments = new();
+    private List<LoanInstallment> _filteredInstallments = new();
+    private bool _isLoading = true;
+    private string _searchString = "";
+    private string _filterStatus = "All";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInstallments();
+    }
+
+    private async Task LoadInstallments()
+    {
+        _isLoading = true;
+        try
+        {
+            _allInstallments = await LoanInstallmentService.GetAllLoanInstallmentAsync();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading installments: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnSearchChanged(string text)
+    {
+        _searchString = text;
+        ApplyFilters();
+    }
+
+    private void OnFilterChanged(string status)
+    {
+        _filterStatus = status;
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        var query = _allInstallments.AsEnumerable();
+
+        if (_filterStatus != "All")
+        {
+            if (_filterStatus == "Overdue")
+                query = query.Where(i => i.DueDate < DateTime.Now && i.Status != "Paid");
+            else
+                query = query.Where(i => i.Status == _filterStatus);
+        }
+
+        if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            query = query.Where(i => 
+                (i.LoanDisbursment?.LoanApplication?.Borrower?.FirstName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (i.LoanDisbursment?.LoanApplication?.Borrower?.LastName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        _filteredInstallments = query.OrderBy(i => i.DueDate).ToList();
+    }
+
+    private async Task OpenPaymentDialogAsync(LoanInstallment installment)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Installment", installment);
+
+        var dialog = await DialogService.ShowAsync<LoanPlatform.Components.Dialogs.ReceivePaymentDialog>("Process Payment", parameters);
+        var result = await dialog.Result;
+        
+        if (result is not null && !result.Canceled)
+        {
+            await LoadInstallments();
+            Snackbar.Add("Payment successfully recorded.", Severity.Success);
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Paid" => Color.Success,
+            "Partial" => Color.Warning,
+            "Pending" => Color.Info,
+            "Overdue" => Color.Error,
+            _ => Color.Default
+        };
+    }
+}
