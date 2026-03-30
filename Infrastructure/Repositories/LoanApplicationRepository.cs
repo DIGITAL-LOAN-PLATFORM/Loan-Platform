@@ -26,6 +26,7 @@ namespace Infrastructure.Repositories
                 .Include(l => l.Borrower)
                 .Include(l => l.loanProduct)
                 .Include(l => l.paymentModality)
+                .Include(l => l.Guarantors)
                 .ToListAsync();
         }
 
@@ -37,17 +38,16 @@ namespace Infrastructure.Repositories
                 .Include(l => l.loanProduct)
                 .Include(l => l.paymentModality)
                 .Include(l => l.ProvidedDocuments)
+                .Include(l => l.Guarantors)
                 .FirstOrDefaultAsync(l => l.Id == id);
         }
 
         //CreateLoanApplicationAsync
         public async Task CreateLoanApplicationAsync(CreateLoanApplicationDTO createLoanApplicationDTO)
         {
-            // Generate Application Number: LYYMMDD-NN (e.g., L260326-01)
+            // Generate Application Number
             var datePart = DateTime.Now.ToString("yyMMdd");
             var prefix = $"L{datePart}-";
-
-            // Find the highest sequence number for today to avoid duplicates if applications were deleted
             var countToday = await _context.LoanApplications
                 .CountAsync(l => l.ApplicationNumber.StartsWith(prefix));
             
@@ -60,11 +60,29 @@ namespace Infrastructure.Repositories
                 BorrowerId = createLoanApplicationDTO.BorrowerId,
                 ModalityId = createLoanApplicationDTO.ModalityId,
                 RequestedAmount = createLoanApplicationDTO.RequestedAmount,
+                InterestRate = createLoanApplicationDTO.InterestRate,
                 Duration = createLoanApplicationDTO.Duration,
                 Purpose = createLoanApplicationDTO.Purpose,
                 ApplicationDate = DateTime.Now,
                 ApprovalStatus = "Pending",
-                ProvidedDocuments = new List<ProvidedDocument>()
+                ProvidedDocuments = new List<ProvidedDocument>(),
+                Guarantors = new List<Guarantor>
+                {
+                    new Guarantor
+                    {
+                        IdentificationNumber = createLoanApplicationDTO.Guarantor.IdentificationNumber,
+                        Name = createLoanApplicationDTO.Guarantor.Name,
+                        DOB = createLoanApplicationDTO.Guarantor.DOB,
+                        Email = createLoanApplicationDTO.Guarantor.Email,
+                        Phone = createLoanApplicationDTO.Guarantor.Phone,
+                        GuarantorType = createLoanApplicationDTO.Guarantor.GuarantorType,
+                        Province = createLoanApplicationDTO.Guarantor.Province,
+                        District = createLoanApplicationDTO.Guarantor.District,
+                        Sector = createLoanApplicationDTO.Guarantor.Sector,
+                        Cell = createLoanApplicationDTO.Guarantor.Cell,
+                        Village = createLoanApplicationDTO.Guarantor.Village
+                    }
+                }
             };
 
             // Process uploaded documents
@@ -102,17 +120,63 @@ namespace Infrastructure.Repositories
         //UpdateLoanApplicationAsync
         public async Task UpdateLoanApplicationAsync(UpdateLoanApplicationDTO updateLoanApplicationDTO)
         {
-            var loanApplication = await _context.LoanApplications.FindAsync(updateLoanApplicationDTO.Id);
+            var loanApplication = await _context.LoanApplications
+                .Include(l => l.ProvidedDocuments)
+                .Include(l => l.Guarantors)
+                .FirstOrDefaultAsync(l => l.Id == updateLoanApplicationDTO.Id);
+                
             if (loanApplication != null)
             {
                 loanApplication.ProductId = updateLoanApplicationDTO.ProductId;
                 loanApplication.BorrowerId = updateLoanApplicationDTO.BorrowerId;
                 loanApplication.ModalityId = updateLoanApplicationDTO.ModalityId;
                 loanApplication.RequestedAmount = updateLoanApplicationDTO.RequestedAmount;
+                loanApplication.InterestRate = updateLoanApplicationDTO.InterestRate;
                 loanApplication.Duration = updateLoanApplicationDTO.Duration;
                 loanApplication.Purpose = updateLoanApplicationDTO.Purpose;
                 loanApplication.ApplicationDate = updateLoanApplicationDTO.ApplicationDate;
                 loanApplication.ApprovalStatus = "Pending"; // Reset status when updated
+                
+                // Update Guarantor
+                if (updateLoanApplicationDTO.Guarantor != null)
+                {
+                    var existingGuarantor = loanApplication.Guarantors?.FirstOrDefault();
+                    if (existingGuarantor != null)
+                    {
+                        existingGuarantor.IdentificationNumber = updateLoanApplicationDTO.Guarantor.IdentificationNumber;
+                        existingGuarantor.Name = updateLoanApplicationDTO.Guarantor.Name;
+                        existingGuarantor.DOB = updateLoanApplicationDTO.Guarantor.DOB;
+                        existingGuarantor.Email = updateLoanApplicationDTO.Guarantor.Email;
+                        existingGuarantor.Phone = updateLoanApplicationDTO.Guarantor.Phone;
+                        existingGuarantor.GuarantorType = updateLoanApplicationDTO.Guarantor.GuarantorType;
+                        existingGuarantor.Province = updateLoanApplicationDTO.Guarantor.Province;
+                        existingGuarantor.District = updateLoanApplicationDTO.Guarantor.District;
+                        existingGuarantor.Sector = updateLoanApplicationDTO.Guarantor.Sector;
+                        existingGuarantor.Cell = updateLoanApplicationDTO.Guarantor.Cell;
+                        existingGuarantor.Village = updateLoanApplicationDTO.Guarantor.Village;
+                    }
+                    else
+                    {
+                        if (loanApplication.Guarantors == null)
+                        {
+                            loanApplication.Guarantors = new List<Guarantor>();
+                        }
+                        loanApplication.Guarantors.Add(new Guarantor
+                        {
+                            IdentificationNumber = updateLoanApplicationDTO.Guarantor.IdentificationNumber,
+                            Name = updateLoanApplicationDTO.Guarantor.Name,
+                            DOB = updateLoanApplicationDTO.Guarantor.DOB,
+                            Email = updateLoanApplicationDTO.Guarantor.Email,
+                            Phone = updateLoanApplicationDTO.Guarantor.Phone,
+                            GuarantorType = updateLoanApplicationDTO.Guarantor.GuarantorType,
+                            Province = updateLoanApplicationDTO.Guarantor.Province,
+                            District = updateLoanApplicationDTO.Guarantor.District,
+                            Sector = updateLoanApplicationDTO.Guarantor.Sector,
+                            Cell = updateLoanApplicationDTO.Guarantor.Cell,
+                            Village = updateLoanApplicationDTO.Guarantor.Village
+                        });
+                    }
+                }
                 
                 // Process new uploaded documents if any
                 if (updateLoanApplicationDTO.ProvidedDocuments != null && updateLoanApplicationDTO.ProvidedDocuments.Any())

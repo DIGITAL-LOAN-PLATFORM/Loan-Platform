@@ -12,10 +12,12 @@ namespace Domain.Entities
         public int ModalityId { get; set;}
         public PaymentModality? paymentModality { get; set; }
         public decimal RequestedAmount { get; set;}
+        public decimal InterestRate { get; set; }
         public int Duration { get; set;}
         public string? Purpose {get; set; }
         public DateTime ApplicationDate { get; set; }
         public List<ProvidedDocument> ProvidedDocuments { get; set; } = new();
+        public List<Guarantor> Guarantors { get; set; } = new();
 
 
         //approval of status
