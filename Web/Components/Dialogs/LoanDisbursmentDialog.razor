@@ -1,0 +1,153 @@
+@using Application.DTO
+@using Domain.Entities
+@using LoanAppEntity = Domain.Entities.LoanApplication
+@using Application.Services.LoanDisbursments
+@using Application.Services.PaymentModalities
+@using Application.Services.Accounts
+@inject ILoanDisbursmentService LoanDisbursmentService
+@inject IPaymentModalityService PaymentModalityService
+@inject IAccountService AccountService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Disburse Loan: @Application.ApplicationNumber</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_success">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle1"><b>Borrower:</b> @($"{Application.Borrower?.FirstName} {Application.Borrower?.LastName}")</MudText>
+                    <MudText Typo="Typo.subtitle1"><b>Requested Amount:</b> @Application.RequestedAmount.ToString("C")</MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="Model.DisbursedAmount" Label="Disbursed Amount" Format="N2" Required="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="Model.InterestRate" Label="Interest Rate (%)" Format="N2" Required="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudNumericField @bind-Value="Model.TotalRepaymentAmount" Label="Total Repayment Amount" Format="N2" Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect @bind-Value="Model.PaymentMode" Label="Payment Mode" Required="true">
+                        <MudSelectItem Value="@("Cash")">Cash</MudSelectItem>
+                        <MudSelectItem Value="@("Bank Transfer")">Bank Transfer</MudSelectItem>
+                        <MudSelectItem Value="@("Mobile Money")">Mobile Money</MudSelectItem>
+                        <MudSelectItem Value="@("Cheque")">Cheque</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.ReferenceNumber" Label="Reference / Receipt Number" Required="true" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSelect @bind-Value="Model.AccountId" Label="Funding Account (Deducts Balance)" Required="true">
+                        @foreach (var account in _accounts)
+                        {
+                            <MudSelectItem Value="@account.Id">@($"{account.Name} - {account.Number} (Balance: {account.Balance:C})")</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudDatePicker @bind-Date="_disbursementDate" Label="Disbursement Date" Required="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                     <MudSelect @bind-Value="Model.PaymentModalityId" Label="Payment Modality" Required="true">
+                        @foreach (var modality in _modalities)
+                        {
+                            <MudSelectItem Value="@modality.Id">@modality.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudDatePicker @bind-Date="_startDate" Label="Interest Start Date" Required="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudDatePicker @bind-Date="_endDate" Label="Interest End Date" Required="true" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit">Submit Disbursement</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public LoanAppEntity Application { get; set; } = default!;
+
+    private CreateLoanDisbursmentDTO Model { get; set; } = new();
+    private MudForm _form = default!;
+    private bool _success;
+
+    private DateTime? _disbursementDate = DateTime.Now;
+    private DateTime? _startDate = DateTime.Now;
+    private DateTime? _endDate = DateTime.Now.AddMonths(1);
+
+    private List<PaymentModality> _modalities = [];
+    private List<Account> _accounts = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _modalities = await PaymentModalityService.GetAllAsync();
+        _accounts = await AccountService.GetAllAsync();
+        
+        Model.LoanApplicationId = Application.Id;
+        Model.DisbursedAmount = Application.RequestedAmount;
+        Model.InterestRate = Application.InterestRate;
+        Model.PaymentModalityId = Application.ModalityId;
+        
+        decimal timeInYears = 0m;
+        var modalityName = _modalities.FirstOrDefault(m => m.Id == Model.PaymentModalityId)?.Name?.ToLower();
+        if (modalityName == "weekly")
+            timeInYears = Application.Duration / 52m;
+        else if (modalityName == "monthly")
+            timeInYears = Application.Duration / 12m;
+        else if (modalityName == "yearly" || modalityName == "annually")
+            timeInYears = Application.Duration;
+        else
+            timeInYears = Application.Duration / 12m;
+
+        decimal totalInterest = Model.DisbursedAmount * (Model.InterestRate / 100m) * timeInYears;
+        Model.TotalRepaymentAmount = Model.DisbursedAmount + totalInterest;
+        
+        _startDate = DateTime.Now;
+        if (modalityName == "weekly")
+            _endDate = DateTime.Now.AddDays(Application.Duration * 7);
+        else if (modalityName == "yearly" || modalityName == "annually")
+            _endDate = DateTime.Now.AddYears(Application.Duration);
+        else
+            _endDate = DateTime.Now.AddMonths(Application.Duration);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await _form.ValidateAsync();
+        if (_form.IsValid)
+        {
+            Model.DisbursementDate = _disbursementDate ?? DateTime.Now;
+            Model.InterestClockStartDate = _startDate ?? DateTime.Now;
+            Model.InterestClockEndDate = _endDate ?? DateTime.Now;
+
+            try
+            {
+                await LoanDisbursmentService.CreateLoanDisbursment(Model);
+                Snackbar.Add("Loan disbursed successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}
