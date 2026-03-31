@@ -1,0 +1,145 @@
+@page "/loan-disbursment"
+@using Application.DTO
+@using Domain.Entities
+@using Application.Services
+@using LoanAppEntity = Domain.Entities.LoanApplication
+@using Application.Services.LoanApplications
+@using Application.Services.LoanDisbursments
+@using LoanPlatform.Components.Dialogs
+@inject ILoanApplicationService _loanApplicationService
+@inject ILoanDisbursmentService _loanDisbursmentService
+@inject IDialogService _dialogService
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigationManager
+
+<PageTitle>Loan Disbursment</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+    <MudStack Spacing="3">
+        <MudText Typo="Typo.h4" Class="font-weight-bold">Loan Disbursment</MudText>
+        <MudText Typo="Typo.body1" Color="Color.Secondary">Manage loan disbursments and track payments.</MudText>
+
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by name or ID" Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="250"
+                                  OnDebounceIntervalElapsed="OnSearchChanged" />
+                </MudItem>
+                <MudItem xs="12" sm="6" Class="d-flex justify-end">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@(() => NavigateToDisbursmentPage())">Disburs Loan</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudPaper Elevation="2">
+            <MudTable Items="@_loanApplications" Hover="true" Dense="false" Bordered="true" Striped="true"
+                      Loading="@_isLoading" LoadingProgressColor="Color.Primary">
+                <HeaderContent>
+                    <MudTh>Application ID</MudTh>
+                    <MudTh>Customer Name</MudTh>
+                    <MudTh>Loan Amount</MudTh>
+                    <MudTh>Interest Rate</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Application ID">@context.Id</MudTd>
+                    <MudTd DataLabel="Customer Name">@($"{context.Borrower?.FirstName} {context.Borrower?.LastName}")</MudTd>
+                    <MudTd DataLabel="Loan Amount">@context.RequestedAmount.ToString("C")</MudTd>
+                    <MudTd DataLabel="Interest Rate">@context.InterestRate%</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Color="GetStatusColor(context.ApprovalStatus)" Size="Size.Small">@context.ApprovalStatus</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="() => NavigateToDisbursmentPage(context.Id)"
+                                     title="View Details" />
+                        <MudIconButton Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Small" OnClick="() => OpenDisbursmentDialogAsync(context)"
+                                     title="Disburse" Disabled="@(context.ApprovalStatus != "Approved")" />
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No loan applications found.</MudText>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText>Loading loan applications...</MudText>
+                </LoadingContent>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudPaper>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private List<LoanAppEntity> _loanApplications = new();
+    private bool _isLoading = true;
+    private string _searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLoanApplications();
+    }
+
+    private async Task LoadLoanApplications()
+    {
+        _isLoading = true;
+        try
+        {
+            var applications = await _loanApplicationService.GetAllLoanApplicationAsync();
+            _loanApplications = applications.Where(a => a.ApprovalStatus == "Approved").ToList();
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add($"Error loading loan applications: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnSearchChanged(string text)
+    {
+        _searchString = text;
+        await LoadLoanApplications();
+    }
+
+    private async Task OpenDisbursmentDialogAsync(LoanAppEntity app)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("Application", app);
+
+        var dialog = await _dialogService.ShowAsync<LoanDisbursmentDialog>("Disburse Loan", parameters);
+        var result = await dialog.Result;
+        
+        if (result is not null && !result.Canceled)
+        {
+            await LoadLoanApplications();
+            _snackbar.Add("Disbursement successful.", Severity.Success);
+        }
+    }
+
+    private void NavigateToDisbursmentPage(int? applicationId = null)
+    {
+        // For viewing details, we can potentially use another dialog or a details page
+        // For now, let's keep the navigation but ensure it's not the same page
+        if (applicationId.HasValue)
+        {
+             _snackbar.Add("View details for " + applicationId, Severity.Info);
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Approved" => Color.Success,
+            "Pending" => Color.Warning,
+            "Rejected" => Color.Error,
+            _ => Color.Default
+        };
+    }
+}

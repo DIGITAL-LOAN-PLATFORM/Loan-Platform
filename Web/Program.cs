@@ -3,6 +3,8 @@ using Application.Interfaces;
 using Infrastructure.Services;
 using MudBlazor.Services;
 using Infrastructure.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+//Application Services
 using Application.Services.PaymentTypes;
 using Application.Services.PaymentModalities;
 using Application.Services.Reasons;
@@ -10,8 +12,12 @@ using Application.Services.GuarantorTypes;
 using Application.Services.Borrowers;
 using Application.Services.Accounts;
 using Application.Services.LoanProducts;
-using Microsoft.Extensions.FileProviders;
+using Application.Services.RequiredDocuments;
+using Application.Services.LoanApplications;
+using Application.Services.LoanDisbursments;
 using Application.Services.Guarantors;
+using Application.Services.LoanInstallments;
+using Application.Services.LoanPayments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +35,14 @@ builder.Services.AddScoped<IGuarantorService, GuarantorService>();
 builder.Services.AddScoped<IBorrowerService, BorrowerService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ILoanProductService, LoanProductService>();
+builder.Services.AddScoped<IRequiredDocumentService, RequiredDocumentService>();
+builder.Services.AddScoped<ILoanApplicationService, LoanApplicationService>();
+builder.Services.AddScoped<ILoanDisbursmentService, LoanDisbursmentServices>();
+builder.Services.AddScoped<ILoanInstallmentService, LoanInstallmentService>();
+builder.Services.AddScoped<ILoanPaymentService, LoanPaymentService>();
+
+// Register Background Service for Daily Tracking
+builder.Services.AddHostedService<Web.Services.DailyLoanTrackingService>();
 
 
 

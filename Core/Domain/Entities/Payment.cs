@@ -4,8 +4,8 @@ namespace Domain.Entities
      public class Payment
      {
         public int Id { get; set; }
-        public int LoanDisbursementId { get; set; }
-        public LoanDisbursement? LoanDisbursement { get; set; }
+        public int LoanDisbursmentId { get; set; }
+        public LoanDisbursment? LoanDisbursment { get; set; }
         public  decimal TotalAmountPaid  { get; set; }
         public decimal? PenaltyAllocated { get; set; }
         public PaymentType? PaymentType{ get; set;}

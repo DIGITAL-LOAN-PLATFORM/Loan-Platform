@@ -1,0 +1,595 @@
+@using Application.DTO
+@using Domain.Entities
+@using Application.Interfaces
+@using Application.Services.Borrowers
+@using Application.Services.LoanProducts
+@using Application.Services.PaymentModalities
+@using Application.Services.LoanApplications
+@using Application.Services.RequiredDocuments
+@using Application.Services.GuarantorTypes
+@inject IBorrowerService BorrowerService
+@inject ILoanProductService LoanProductService
+@inject IPaymentModalityService PaymentModalityService
+@inject ILoanApplicationService LoanApplicationService
+@inject IRequiredDocumentService RequiredDocumentService
+@inject ILocationService LocationService
+@inject IGuarantorTypeService GuarantorTypeService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_success" ValidationDelay="0">
+            <MudGrid>
+                @if (IsReadOnly)
+                {
+                    var b = _borrowers.FirstOrDefault(x => x.Id == Model.BorrowerId);
+                    var p = _loanProducts.FirstOrDefault(x => x.Id == Model.ProductId);
+                    <MudItem xs="12">
+                        <MudCard Outlined="true" Class="mb-3">
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6">Borrower Details</MudText>
+                                <MudText>Name: @($"{b?.FirstName} {b?.LastName}")</MudText>
+                                <MudText>Phone: @b?.PhoneNumber</MudText>
+                                <MudText>Email: @b?.Email</MudText>
+                                <MudText>Location: @($"{b?.Province}, {b?.District}, {b?.Sector}")</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                        <MudCard Outlined="true">
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6">Loan Product Info</MudText>
+                                <MudText>Product: @p?.Name</MudText>
+                                <MudText>Interest Rate: @Model.InterestRate%</MudText>
+                                <MudText>Description: @p?.Description</MudText>
+                                <MudText><b>Total Interest:</b> @TotalInterest.ToString("N2")</MudText>
+                                <MudText><b>Total Repayment:</b> @TotalRepayment.ToString("N2")</MudText>
+                                <MudText><b>Installment Amount:</b> @InstallmentAmount.ToString("N2")</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12" md="6">
+                        <MudSelect @bind-Value="Model.BorrowerId" Label="Borrower" Required="true" ReadOnly="IsReadOnly">
+                            @foreach (var borrower in _borrowers)
+                            {
+                                <MudSelectItem Value="@borrower.Id">@($"{borrower.FirstName} {borrower.LastName}")</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int" Value="Model.ProductId" ValueChanged="OnProductChangedAsync" Label="Loan Product" Required="true" ReadOnly="IsReadOnly">
+                            @foreach (var product in _loanProducts)
+                            {
+                                <MudSelectItem Value="@product.Id">@product.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudNumericField @bind-Value="Model.InterestRate" Label="Interest Rate" Format="N2" Required="true" ReadOnly="IsReadOnly" Immediate="true" />
+                    </MudItem>
+                }
+                <MudItem xs="12" md="6">
+                    <MudSelect @bind-Value="Model.ModalityId" Label="Payment Modality" Required="true" ReadOnly="IsReadOnly">
+                        @foreach (var modality in _modalities)
+                        {
+                            <MudSelectItem Value="@modality.Id">@modality.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="Model.RequestedAmount" Label="Requested Amount" Format="N2" Required="true" ReadOnly="IsReadOnly" Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="Model.Duration" Label="@DurationLabel" Required="true" ReadOnly="IsReadOnly" Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.Purpose" Label="Purpose" Lines="3" ReadOnly="IsReadOnly" />
+                </MudItem>
+
+                @if (Model.RequestedAmount > 0)
+                {
+                    <MudItem xs="12">
+                        <MudAlert Severity="Severity.Info" Class="mt-2 mb-2">
+                            <b>Amortization Summary:</b> Total Interest: @TotalInterest.ToString("N2") | Total Repayment: @TotalRepayment.ToString("N2") | Installment Amount: @InstallmentAmount.ToString("N2") 
+                        </MudAlert>
+                    </MudItem>
+                    
+                    @if (IsReadOnly || Model.Duration > 0)
+                    {
+                        <MudItem xs="12">
+                            <MudTable Items="@GenerateProjectedSchedule()" Dense="true" Hover="true" Bordered="true" Striped="true" Class="mb-3">
+                                <ToolBarContent>
+                                    <MudText Typo="Typo.subtitle2"><b>Projected Installment Schedule</b></MudText>
+                                </ToolBarContent>
+                                <HeaderContent>
+                                    <MudTh>#</MudTh>
+                                    <MudTh>Due Date</MudTh>
+                                    <MudTh>Amount</MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="inst">
+                                    <MudTd DataLabel="#">@inst.InstallmentNumber</MudTd>
+                                    <MudTd DataLabel="Due Date">@inst.DueDate.ToShortDateString()</MudTd>
+                                    <MudTd DataLabel="Amount">@inst.AmountDue.ToString("C")</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudItem>
+                    }
+                }
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle1" Class="mt-4" Style="font-weight: 600;">Guarantor Details</MudText>
+                    <MudDivider Class="mb-4" />
+                </MudItem>
+
+                @if (IsReadOnly)
+                {
+                    <MudItem xs="12">
+                        <MudCard Outlined="true" Class="mb-3">
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6">Guarantor Info</MudText>
+                                <MudText>Name: @Model.Guarantor?.Name</MudText>
+                                <MudText>ID: @Model.Guarantor?.IdentificationNumber</MudText>
+                                <MudText>Phone: @Model.Guarantor?.Phone</MudText>
+                                <MudText>Email: @Model.Guarantor?.Email</MudText>
+                                <MudText>Location: @($"{Model.Guarantor?.Province}, {Model.Guarantor?.District}, {Model.Guarantor?.Sector}")</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+                else
+                {
+                    <MudItem xs="12" md="4">
+                        <MudTextField @bind-Value="Model.Guarantor.IdentificationNumber" Label="Guarantor ID Number" Required="true" MaxLength="16" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudTextField @bind-Value="Model.Guarantor.Name" Label="Guarantor Name" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudTextField @bind-Value="Model.Guarantor.Email" Label="Email" InputType="InputType.Email" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudTextField @bind-Value="Model.Guarantor.Phone" Label="Phone Number" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect @bind-Value="GuarantorTypeId" Label="Guarantor Type" Required="true">
+                            @foreach (var type in _guarantorTypes)
+                            {
+                                <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudDatePicker @bind-Date="DobBinding" Label="Date of Birth" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect T="string" Value="Model.Guarantor.Province" Label="Province" ValueChanged="OnProvinceChanged" Required="true">
+                            @foreach (var p in _provinces)
+                            {
+                                <MudSelectItem Value="@p.Name">@p.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect T="string" Value="Model.Guarantor.District" Label="District" ValueChanged="OnDistrictChanged" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Guarantor.Province))">
+                            @foreach (var d in _districts)
+                            {
+                                <MudSelectItem Value="@d.Name">@d.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudSelect T="string" Value="Model.Guarantor.Sector" Label="Sector" ValueChanged="OnSectorChanged" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Guarantor.District))">
+                            @foreach (var s in _sectors)
+                            {
+                                <MudSelectItem Value="@s.Name">@s.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string" Value="Model.Guarantor.Cell" Label="Cell" ValueChanged="OnCellChanged" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Guarantor.Sector))">
+                            @foreach (var c in _cells)
+                            {
+                                <MudSelectItem Value="@c.Name">@c.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string" Label="Village" @bind-Value="Model.Guarantor.Village" Required="true" Disabled="@(string.IsNullOrEmpty(Model.Guarantor.Cell))">
+                            @foreach (var v in _villages)
+                            {
+                                <MudSelectItem Value="@v.Name">@v.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                }
+                @if (!IsReadOnly && _requiredDocuments.Any())
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle1" Class="mt-4">Required Documents</MudText>
+                    </MudItem>
+                    @foreach (var reqDoc in _requiredDocuments)
+                    {
+                        <MudItem xs="12" md="6">
+                            <MudText Typo="Typo.body1" Style="font-weight: 500;">@reqDoc.DocumentName</MudText>
+                            <MudFileUpload T="IBrowserFile" FilesChanged="(file) => OnFileUploaded(reqDoc.Id, file)">
+                                <ActivatorContent>
+                                    <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="mt-1">
+                                        Select File
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                            @if (_uploadedFiles.ContainsKey(reqDoc.Id))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Success">Uploaded: @_uploadedFiles[reqDoc.Id].Name</MudText>
+                            }
+                        </MudItem>
+                    }
+                }
+                @if (IsReadOnly && _providedDocuments.Any())
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.subtitle1" Class="mt-4">Uploaded Documents</MudText>
+                        <MudStack Spacing="2">
+                            @foreach (var doc in _providedDocuments)
+                            {
+                                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.AttachFile" Href="@doc.DocumentFile" Target="_blank">
+                                    @doc.DocumentName
+                                </MudButton>
+                            }
+                        </MudStack>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        @if (!IsReadOnly)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">Save</MudButton>
+        }
+        else if (_approvalStatus == "Pending")
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="ApproveAsync">Approve</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="RejectAsync" Class="ml-2">Reject</MudButton>
+        }
+        <MudButton Variant="Variant.Outlined" OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string Title { get; set; } = "Loan Application";
+    [Parameter] public CreateLoanApplicationDTO Model { get; set; } = new();
+    [Parameter] public int ApplicationId { get; set; } = 0;
+    [Parameter] public bool IsReadOnly { get; set; } = false;
+
+    private MudForm _form = default!;
+    private bool _success;
+
+    public class ApplicationInstallmentMock
+    {
+        public int InstallmentNumber { get; set; }
+        public DateTime DueDate { get; set; }
+        public decimal AmountDue { get; set; }
+    }
+
+    private List<Borrower> _borrowers = [];
+    private List<LoanProduct> _loanProducts = [];
+    private List<PaymentModality> _modalities = [];
+    private List<RequiredDocument> _requiredDocuments = [];
+    private Dictionary<int, IBrowserFile> _uploadedFiles = new();
+    private List<ProvidedDocument> _providedDocuments = [];
+    private string _approvalStatus = "";
+
+    public int GuarantorTypeId { get; set; }
+    private List<GuarantorType> _guarantorTypes = new();
+    private List<Province> _provinces = new();
+    private List<District> _districts = new();
+    private List<Sector> _sectors = new();
+    private List<Cell> _cells = new();
+    private List<Village> _villages = new();
+
+    private DateTime? DobBinding
+    {
+        get => Model.Guarantor.DOB == default ? null : Model.Guarantor.DOB;
+        set => Model.Guarantor.DOB = value ?? default;
+    }
+
+    private decimal TotalInterest => CalculateTotalInterest();
+    private decimal TotalRepayment => Model.RequestedAmount + TotalInterest;
+    private decimal InstallmentAmount => Model.Duration > 0 ? TotalRepayment / Model.Duration : 0;
+
+    private string DurationLabel
+    {
+        get
+        {
+            var modality = _modalities.FirstOrDefault(m => m.Id == Model.ModalityId)?.Name?.ToLower();
+            return modality switch
+            {
+                "weekly" => "Duration (Weeks)",
+                "yearly" or "annually" => "Duration (Years)",
+                _ => "Duration (Months)"
+            };
+        }
+    }
+
+    private decimal CalculateTotalInterest()
+    {
+        decimal timeInYears = 0m;
+        var modalityName = _modalities.FirstOrDefault(m => m.Id == Model.ModalityId)?.Name?.ToLower();
+        if (modalityName == "weekly")
+            timeInYears = Model.Duration / 52m;
+        else if (modalityName == "monthly")
+            timeInYears = Model.Duration / 12m;
+        else if (modalityName == "yearly" || modalityName == "annually")
+            timeInYears = Model.Duration;
+        else
+            timeInYears = Model.Duration / 12m;
+
+        return Model.RequestedAmount * (Model.InterestRate / 100m) * timeInYears;
+    }
+
+    private IEnumerable<ApplicationInstallmentMock> GenerateProjectedSchedule()
+    {
+        var schedule = new List<ApplicationInstallmentMock>();
+        if (Model.RequestedAmount <= 0 || Model.Duration <= 0) return schedule;
+
+        var modalityName = _modalities.FirstOrDefault(m => m.Id == Model.ModalityId)?.Name?.ToLower();
+        int numberOfInstallments = Model.Duration;
+        if (numberOfInstallments <= 0) numberOfInstallments = 1;
+
+        decimal installmentAmount = TotalRepayment / numberOfInstallments;
+        DateTime nextDueDate = ApplicationId != 0 ? Model.ApplicationDate : DateTime.Now;
+
+        for (int i = 1; i <= numberOfInstallments; i++)
+        {
+            if (modalityName == "weekly")
+                nextDueDate = nextDueDate.AddDays(7);
+            else if (modalityName == "yearly" || modalityName == "annually")
+                nextDueDate = nextDueDate.AddYears(1);
+            else
+                nextDueDate = nextDueDate.AddMonths(1);
+
+            schedule.Add(new ApplicationInstallmentMock
+            {
+                InstallmentNumber = i,
+                DueDate = nextDueDate,
+                AmountDue = installmentAmount
+            });
+        }
+        return schedule;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _borrowers = await BorrowerService.GetAllAsync();
+        _loanProducts = await LoanProductService.GetAllAsync();
+        _modalities = await PaymentModalityService.GetAllAsync();
+        _guarantorTypes = await GuarantorTypeService.GetAllAsync();
+        _provinces = await LocationService.GetAllLocationsAsync();
+
+        if (ApplicationId != 0)
+        {
+            var app = await LoanApplicationService.GetLoanApplicationByIdAsync(ApplicationId);
+            if (app != null)
+            {
+                _providedDocuments = app.ProvidedDocuments ?? new List<ProvidedDocument>();
+                _approvalStatus = app.ApprovalStatus;
+                
+                if (Model.Guarantor.GuarantorType != null)
+                {
+                    GuarantorTypeId = Model.Guarantor.GuarantorType.Id;
+                }
+            }
+        }
+        else if (Model.ProductId != 0)
+        {
+            await LoadRequiredDocumentsAsync(Model.ProductId);
+        }
+
+        if (!string.IsNullOrEmpty(Model.Guarantor?.Province))
+        {
+            var province = _provinces.FirstOrDefault(p => p.Name == Model.Guarantor.Province);
+            if (province != null)
+            {
+                _districts = province.Districts;
+                if (!string.IsNullOrEmpty(Model.Guarantor.District))
+                {
+                    var district = _districts.FirstOrDefault(d => d.Name == Model.Guarantor.District);
+                    if (district != null)
+                    {
+                        _sectors = district.Sectors;
+                        if (!string.IsNullOrEmpty(Model.Guarantor.Sector))
+                        {
+                            var sector = _sectors.FirstOrDefault(s => s.Name == Model.Guarantor.Sector);
+                            if (sector != null)
+                            {
+                                _cells = sector.Cells;
+                                if (!string.IsNullOrEmpty(Model.Guarantor.Cell))
+                                {
+                                    var cell = _cells.FirstOrDefault(c => c.Name == Model.Guarantor.Cell);
+                                    if (cell != null)
+                                    {
+                                        _villages = cell.Villages;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private async Task OnProductChangedAsync(int productId)
+    {
+        Model.ProductId = productId;
+        var product = _loanProducts.FirstOrDefault(p => p.Id == productId);
+        if (product != null)
+        {
+            Model.InterestRate = product.InterestRate ?? 0;
+        }
+        await LoadRequiredDocumentsAsync(productId);
+    }
+
+    private async Task LoadRequiredDocumentsAsync(int productId)
+    {
+        _requiredDocuments = (await RequiredDocumentService.GetAllRequiredDocumentsAsync())
+            .Where(r => r.LoanProductId == productId).ToList();
+        _uploadedFiles.Clear();
+    }
+
+    private void OnFileUploaded(int reqDocId, IBrowserFile file)
+    {
+        if (file != null)
+        {
+            _uploadedFiles[reqDocId] = file;
+        }
+    }
+
+    private void OnProvinceChanged(string value)
+    {
+        Model.Guarantor.Province = value;
+        Model.Guarantor.District = string.Empty;
+        Model.Guarantor.Sector = string.Empty;
+        Model.Guarantor.Cell = string.Empty;
+        Model.Guarantor.Village = string.Empty;
+        
+        _districts = _provinces.FirstOrDefault(p => p.Name == value)?.Districts ?? new();
+        _sectors = new();
+        _cells = new();
+        _villages = new();
+    }
+
+    private void OnDistrictChanged(string value)
+    {
+        Model.Guarantor.District = value;
+        Model.Guarantor.Sector = string.Empty;
+        Model.Guarantor.Cell = string.Empty;
+        Model.Guarantor.Village = string.Empty;
+
+        _sectors = _districts.FirstOrDefault(d => d.Name == value)?.Sectors ?? new();
+        _cells = new();
+        _villages = new();
+    }
+
+    private void OnSectorChanged(string value)
+    {
+        Model.Guarantor.Sector = value;
+        Model.Guarantor.Cell = string.Empty;
+        Model.Guarantor.Village = string.Empty;
+
+        _cells = _sectors.FirstOrDefault(s => s.Name == value)?.Cells ?? new();
+        _villages = new();
+    }
+
+    private void OnCellChanged(string value)
+    {
+        Model.Guarantor.Cell = value;
+        Model.Guarantor.Village = string.Empty;
+
+        _villages = _cells.FirstOrDefault(c => c.Name == value)?.Villages ?? new();
+    }
+
+    private async Task SaveAsync()
+    {
+        Model.Guarantor.GuarantorType = _guarantorTypes.FirstOrDefault(t => t.Id == GuarantorTypeId);
+
+        await _form.ValidateAsync();
+
+        if (!IsReadOnly && _requiredDocuments.Any() && _uploadedFiles.Count < _requiredDocuments.Count)
+        {
+            Snackbar.Add("Please upload all required documents.", Severity.Warning);
+            return;
+        }
+
+        if (!_form.IsValid)
+        {
+            Snackbar.Add("Please fill all required fields. Some fields are invalid.", Severity.Error);
+            var errors = string.Join(", ", _form.Errors);
+            Console.WriteLine($"Form Errors: {errors}");
+            return;
+        }
+
+        try
+        {
+            Model.ProvidedDocuments = new List<DocumentUploadDTO>();
+            foreach(var kvp in _uploadedFiles)
+            {
+                var reqDoc = _requiredDocuments.First(r => r.Id == kvp.Key);
+                // Important: Blazor Server uses a stream, limiting to 10MB
+                using var stream = kvp.Value.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                using var ms = new System.IO.MemoryStream();
+                await stream.CopyToAsync(ms);
+                
+                Model.ProvidedDocuments.Add(new DocumentUploadDTO 
+                {
+                    DocumentName = reqDoc.DocumentName,
+                    FileName = kvp.Value.Name,
+                    Base64Content = Convert.ToBase64String(ms.ToArray())
+                });
+            }
+
+            if (ApplicationId == 0)
+            {
+                await LoanApplicationService.CreateLoanApplicationAsync(Model);
+            }
+            else
+            {
+                var updateDto = new UpdateLoanApplicationDTO
+                {
+                    Id = ApplicationId,
+                    ProductId = Model.ProductId,
+                    BorrowerId = Model.BorrowerId,
+                    ModalityId = Model.ModalityId,
+                    RequestedAmount = Model.RequestedAmount,
+                    InterestRate = Model.InterestRate,
+                    Duration = Model.Duration,
+                    Purpose = Model.Purpose,
+                    ApplicationDate = Model.ApplicationDate,
+                    ProvidedDocuments = Model.ProvidedDocuments
+                };
+                await LoanApplicationService.UpdateLoanApplicationAsync(updateDto);
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving application: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Save Exception: {ex}");
+        }
+    }
+
+    private async Task ApproveAsync()
+    {
+        await LoanApplicationService.ApproveLoanApplicationAsync(ApplicationId);
+        Snackbar.Add("Application approved.", Severity.Success);
+        
+        var borrower = _borrowers.FirstOrDefault(b => b.Id == Model.BorrowerId);
+        string emailMsg = $"[EMAIL MOCK] To: {borrower?.Email} | Subject: Loan Approved";
+        Console.WriteLine(emailMsg);
+        Snackbar.Add($"Simulated Email dispatched to {borrower?.Email} (Approval)", Severity.Info);
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private async Task RejectAsync()
+    {
+        await LoanApplicationService.RejectLoanApplicationAsync(ApplicationId);
+        Snackbar.Add("Application rejected.", Severity.Error);
+
+        var borrower = _borrowers.FirstOrDefault(b => b.Id == Model.BorrowerId);
+        string emailMsg = $"[EMAIL MOCK] To: {borrower?.Email} | Subject: Loan Rejected";
+        Console.WriteLine(emailMsg);
+        Snackbar.Add($"Simulated Email dispatched to {borrower?.Email} (Rejection)", Severity.Info);
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Close() { MudDialog.Cancel(); }
+}
