@@ -233,8 +233,17 @@ namespace Infrastructure.Repositories
             var loanApplication = await _context.LoanApplications.FindAsync(id);
             if (loanApplication != null)
             {
+                if (loanApplication.ApprovalStatus != "Pending")
+                {
+                    throw new InvalidOperationException("Only pending loan applications can be approved.");
+                }
+
                 loanApplication.ApprovalStatus = "Approved";
                 loanApplication.ApprovalDate = DateTime.Now;
+                loanApplication.RejectionDate = null;
+                loanApplication.RejectionBy = null;
+                loanApplication.RejectionComments = null;
+
                 _context.LoanApplications.Update(loanApplication);
                 await _context.SaveChangesAsync();
             }
@@ -248,6 +257,23 @@ namespace Infrastructure.Repositories
             {
                 loanApplication.ApprovalStatus = "Rejected";
                 loanApplication.RejectionDate = DateTime.Now;
+                _context.LoanApplications.Update(loanApplication);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        //DisburseLoanApplicationAsync
+        public async Task DisburseLoanApplicationAsync(int id)
+        {
+            var loanApplication = await _context.LoanApplications.FindAsync(id);
+            if (loanApplication != null)
+            {
+                if (loanApplication.ApprovalStatus != "Approved")
+                {
+                    throw new InvalidOperationException("Only approved applications can be disbursed.");
+                }
+
+                loanApplication.ApprovalStatus = "Disbursed";
                 _context.LoanApplications.Update(loanApplication);
                 await _context.SaveChangesAsync();
             }

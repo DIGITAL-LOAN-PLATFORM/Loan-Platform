@@ -33,6 +33,7 @@
                 <MudTd>@context.Name</MudTd>
                 <MudTd>@context.Email</MudTd>
                 <MudTd>@context.Phone</MudTd>
+                <MudTd>@context.GuarantorType?.Name.ToString()</MudTd>
                 <MudTd>@($"{context.Province}, {context.District}")</MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewGuarantorAsync(context)" />
@@ -70,6 +71,8 @@
                 Name = dto.Name,
                 Email = dto.Email,
                 Phone = dto.Phone,
+                GuarantorTypeId = dto.GuarantorType?.Id,
+                GuarantorType = dto.GuarantorType,
                 DOB = dto.DOB ,
                 Province = dto.Province,
                 District = dto.District,
@@ -93,6 +96,7 @@
             Name = guarantor.Name ?? "",
             Email = guarantor.Email ?? "",
             Phone = guarantor.Phone ?? "",
+            GuarantorType = guarantor.GuarantorType,
             DOB = guarantor.DOB ?? default ,
             Province = guarantor.Province ?? "",
             District = guarantor.District ?? "",

@@ -45,7 +45,7 @@
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditApplicationAsync(context)" />
                 }
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteApplicationAsync(context)" />
+                @* <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteApplicationAsync(context)" /> *@
             </MudTd>
         </RowTemplate>
         <PagerContent>
@@ -73,6 +73,7 @@
     private Color GetStatusColor(string status) => status switch
     {
         "Approved" => Color.Success,
+        "Disbursed" => Color.Success,
         "Rejected" => Color.Error,
         "Closed" => Color.Default,
         _ => Color.Warning
@@ -182,7 +183,7 @@
         await DialogService.ShowAsync<LoanApplicationDialog>("Application Details", parameters);
     }
 
-    private async Task DeleteApplicationAsync(LoanAppEntity app)
+    @* private async Task DeleteApplicationAsync(LoanAppEntity app)
     {
         var result = await DialogService.ShowMessageBoxAsync("Confirm Delete", $"Are you sure you want to delete application {app.ApplicationNumber}?", "Delete", "Cancel");
         if (result == true)
@@ -191,5 +192,5 @@
             await LoadDataAsync();
             Snackbar.Add("Application deleted.", Severity.Success);
         }
-    }
+    } *@
 }

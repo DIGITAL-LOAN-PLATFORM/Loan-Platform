@@ -19,5 +19,7 @@ namespace Application.Interfaces
         Task ApproveLoanApplicationAsync(int id);
         //Reject
         Task RejectLoanApplicationAsync(int id);
+        //Disburse
+        Task DisburseLoanApplicationAsync(int id);
     }
 }

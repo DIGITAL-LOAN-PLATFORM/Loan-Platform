@@ -53,12 +53,15 @@
                         </MudSelect>
                     }
                 </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="Model.SpouseName" Label="Spouse Name" ReadOnly="IsReadOnly" />
-                </MudItem>
-                <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="Model.SpouseId" Label="Spouse ID" ReadOnly="IsReadOnly" />
-                </MudItem>
+                @if (Model.MaritalStatus == "Married")
+                {
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="Model.SpouseName" Label="Spouse Name" ReadOnly="IsReadOnly" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="Model.SpouseId" Label="Spouse ID" ReadOnly="IsReadOnly" />
+                    </MudItem>
+                }
 
                 <MudItem xs="12" md="4">
                     <MudSelect T="string" Value="Model.Province" Label="Province" ValueChanged="OnProvinceChanged" ReadOnly="IsReadOnly" Required="true">

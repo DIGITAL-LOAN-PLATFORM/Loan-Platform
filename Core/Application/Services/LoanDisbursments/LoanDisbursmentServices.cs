@@ -87,6 +87,8 @@ namespace Application.Services.LoanDisbursments
                     UpdatedAt = DateTime.Now
                 });
             }
+
+            await _loanApplication.DisburseLoanApplicationAsync(dto.LoanApplicationId);
         }
 
         public async Task UpdateLoanDisbursment(UpdateLoanDisbursmentDTO updateLoanDisbursmentDTO)

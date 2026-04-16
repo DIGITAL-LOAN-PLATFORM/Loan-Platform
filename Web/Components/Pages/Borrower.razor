@@ -37,7 +37,7 @@
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewBorrowerAsync(context)" />
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditBorrowerAsync(context)" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteBorrowerAsync(context)" />
+                    @* <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteBorrowerAsync(context)" /> *@
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -159,7 +159,7 @@
         await dialog.Result;
     }
 
-    private async Task DeleteBorrowerAsync(Domain.Entities.Borrower borrower)
+    @* private async Task DeleteBorrowerAsync(Domain.Entities.Borrower borrower)
     {
         var parameters = new DialogParameters
         {
@@ -176,5 +176,5 @@
             await OnInitializedAsync();
             Snackbar.Add("Borrower deleted successfully", Severity.Success);
         }
-    }
+    } *@
 }
