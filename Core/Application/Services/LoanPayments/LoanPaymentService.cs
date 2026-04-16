@@ -90,38 +90,43 @@ namespace Application.Services.LoanPayments
                         Status = installment.Status
                     });
 
-                    // Apply excess to next installment
+                    // Apply excess to next installments (cascading)
                     decimal excess = paymentAmount - remainingOwed;
                     var allInstallments = await _loanInstallmentService.GetLoanInstallmentsByDisbursementIdAsync(installment.LoanDisbursmentId);
-                    var nextInstallment = allInstallments
+                    var upcomingInstallments = allInstallments
                         .Where(i => i.DueDate > installment.DueDate && i.Status != "Paid")
                         .OrderBy(i => i.DueDate)
-                        .FirstOrDefault();
+                        .ToList();
 
-                    if (nextInstallment != null)
+                    foreach (var nextInst in upcomingInstallments)
                     {
-                        // Apply excess directly to next installment
-                        nextInstallment.AmountPaid += excess;
+                        if (excess <= 0) break;
                         
-                        decimal nextTotalOwed = nextInstallment.AmountDue + nextInstallment.PenaltyAmount;
-                        if (nextInstallment.AmountPaid >= nextTotalOwed)
+                        decimal nextRemaining = nextInst.AmountDue + nextInst.PenaltyAmount - nextInst.AmountPaid;
+                        decimal applyAmount = Math.Min(excess, nextRemaining);
+                        
+                        nextInst.AmountPaid += applyAmount;
+                        excess -= applyAmount;
+                        
+                        decimal nextTotalOwed = nextInst.AmountDue + nextInst.PenaltyAmount;
+                        if (nextInst.AmountPaid >= nextTotalOwed)
                         {
-                            nextInstallment.Status = "Paid";
+                            nextInst.Status = "Paid";
                         }
-                        else if (nextInstallment.AmountPaid > 0)
+                        else if (nextInst.AmountPaid > 0)
                         {
-                            nextInstallment.Status = "Partial";
+                            nextInst.Status = "Partial";
                         }
 
                         await _loanInstallmentRepository.UpdateLoanInstallment(new LoanInstallmentDTO 
                         {
-                            Id = nextInstallment.Id,
-                            AmountPaid = nextInstallment.AmountPaid,
-                            PenaltyAmount = nextInstallment.PenaltyAmount,
-                            Status = nextInstallment.Status
+                            Id = nextInst.Id,
+                            AmountPaid = nextInst.AmountPaid,
+                            PenaltyAmount = nextInst.PenaltyAmount,
+                            Status = nextInst.Status
                         });
                     }
-                    // If no next installment, the excess remains in the account balance (already added above)
+                    // Any remaining excess stays in the account balance
                 }
             }
 
