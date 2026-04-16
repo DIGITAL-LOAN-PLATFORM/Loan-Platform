@@ -9,5 +9,6 @@ namespace Application.Interfaces
         Task<LoanInstallment> UpdateLoanInstallment(LoanInstallmentDTO dto);
         Task<LoanInstallment> GetLoanInstallmentByIdAsync(int id);
         Task<List<LoanInstallment>> GetAllLoanInstallmentAsync();
+        Task<List<LoanInstallment>> GetLoanInstallmentsByDisbursementIdAsync(int disbursementId);
     }
 }

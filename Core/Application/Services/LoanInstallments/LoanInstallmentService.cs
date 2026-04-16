@@ -32,5 +32,10 @@ namespace Application.Services.LoanInstallments
         {
             return await _loanInstallmentRepository.UpdateLoanInstallment(dto);
         }
+
+        public async Task<List<LoanInstallment>> GetLoanInstallmentsByDisbursementIdAsync(int disbursementId)
+        {
+            return await _loanInstallmentRepository.GetLoanInstallmentsByDisbursementIdAsync(disbursementId);
+        }
     }
 }

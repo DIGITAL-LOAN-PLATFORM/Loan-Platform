@@ -1,5 +1,6 @@
 using Application.DTO;
 using Application.Interfaces;
+using Application.Services.LoanInstallments;
 using Domain.Entities;
 
 namespace Application.Services.LoanPayments
@@ -9,12 +10,14 @@ namespace Application.Services.LoanPayments
         private readonly ILoanPayment _loanPaymentRepository;
         private readonly ILoanInstallment _loanInstallmentRepository;
         private readonly IAccount _accountRepository;
+        private readonly ILoanInstallmentService _loanInstallmentService;
 
-        public LoanPaymentService(ILoanPayment loanPaymentRepository, ILoanInstallment loanInstallmentRepository, IAccount accountRepository)
+        public LoanPaymentService(ILoanPayment loanPaymentRepository, ILoanInstallment loanInstallmentRepository, IAccount accountRepository, ILoanInstallmentService loanInstallmentService)
         {
             _loanPaymentRepository = loanPaymentRepository;
             _loanInstallmentRepository = loanInstallmentRepository;
             _accountRepository = accountRepository;
+            _loanInstallmentService = loanInstallmentService;
         }
 
         public async Task<List<LoanPayment>> GetAllLoanPaymentAsync()
@@ -44,29 +47,82 @@ namespace Application.Services.LoanPayments
 
             var payment = await _loanPaymentRepository.CreateLoanPayment(dto);
 
-            // Update Installment mapping
+            // Update Installment mapping with overpayment handling
             var installment = await _loanInstallmentRepository.GetLoanInstallmentByIdAsync(dto.LoanInstallmentId);
             if (installment != null)
             {
-                installment.AmountPaid += dto.Amount;
-                
-                decimal totalOwed = installment.AmountDue + installment.PenaltyAmount;
-                if (installment.AmountPaid >= totalOwed)
-                {
-                    installment.Status = "Paid";
-                }
-                else if (installment.AmountPaid > 0)
-                {
-                    installment.Status = "Partial";
-                }
+                decimal remainingOwed = installment.AmountDue + installment.PenaltyAmount - installment.AmountPaid;
+                decimal paymentAmount = dto.Amount;
 
-                await _loanInstallmentRepository.UpdateLoanInstallment(new LoanInstallmentDTO 
+                // Apply payment to current installment
+                if (paymentAmount <= remainingOwed)
                 {
-                    Id = installment.Id,
-                    AmountPaid = installment.AmountPaid,
-                    PenaltyAmount = installment.PenaltyAmount,
-                    Status = installment.Status
-                });
+                    installment.AmountPaid += paymentAmount;
+                    
+                    if (installment.AmountPaid >= installment.AmountDue + installment.PenaltyAmount)
+                    {
+                        installment.Status = "Paid";
+                    }
+                    else if (installment.AmountPaid > 0)
+                    {
+                        installment.Status = "Partial";
+                    }
+
+                    await _loanInstallmentRepository.UpdateLoanInstallment(new LoanInstallmentDTO 
+                    {
+                        Id = installment.Id,
+                        AmountPaid = installment.AmountPaid,
+                        PenaltyAmount = installment.PenaltyAmount,
+                        Status = installment.Status
+                    });
+                }
+                else
+                {
+                    // Pay off current installment completely
+                    installment.AmountPaid += remainingOwed;
+                    installment.Status = "Paid";
+                    
+                    await _loanInstallmentRepository.UpdateLoanInstallment(new LoanInstallmentDTO 
+                    {
+                        Id = installment.Id,
+                        AmountPaid = installment.AmountPaid,
+                        PenaltyAmount = installment.PenaltyAmount,
+                        Status = installment.Status
+                    });
+
+                    // Apply excess to next installment
+                    decimal excess = paymentAmount - remainingOwed;
+                    var allInstallments = await _loanInstallmentService.GetLoanInstallmentsByDisbursementIdAsync(installment.LoanDisbursmentId);
+                    var nextInstallment = allInstallments
+                        .Where(i => i.DueDate > installment.DueDate && i.Status != "Paid")
+                        .OrderBy(i => i.DueDate)
+                        .FirstOrDefault();
+
+                    if (nextInstallment != null)
+                    {
+                        // Apply excess directly to next installment
+                        nextInstallment.AmountPaid += excess;
+                        
+                        decimal nextTotalOwed = nextInstallment.AmountDue + nextInstallment.PenaltyAmount;
+                        if (nextInstallment.AmountPaid >= nextTotalOwed)
+                        {
+                            nextInstallment.Status = "Paid";
+                        }
+                        else if (nextInstallment.AmountPaid > 0)
+                        {
+                            nextInstallment.Status = "Partial";
+                        }
+
+                        await _loanInstallmentRepository.UpdateLoanInstallment(new LoanInstallmentDTO 
+                        {
+                            Id = nextInstallment.Id,
+                            AmountPaid = nextInstallment.AmountPaid,
+                            PenaltyAmount = nextInstallment.PenaltyAmount,
+                            Status = nextInstallment.Status
+                        });
+                    }
+                    // If no next installment, the excess remains in the account balance (already added above)
+                }
             }
 
             return payment;
