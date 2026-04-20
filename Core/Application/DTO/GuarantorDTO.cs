@@ -9,7 +9,9 @@ namespace Application.DTO
         public DateTime DOB { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public int? GuarantorTypeId { get; set; }
         public GuarantorType? GuarantorType { get; set; }
+        public int LoanApplicationId { get; set; }
 
         // Administrative location hierarchy
         public string Province { get; set; } = string.Empty;
@@ -28,7 +30,9 @@ namespace Application.DTO
         public DateTime DOB { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public int? GuarantorTypeId { get; set; }
         public GuarantorType? GuarantorType { get; set; }
+        public int LoanApplicationId { get; set; }
 
         // Administrative location hierarchy
         public string Province { get; set; } = string.Empty;

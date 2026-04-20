@@ -1,0 +1,15 @@
+<div>
+	<table class="gridview" cellspacing="0" rules="all" border="1" id="ContentPlaceHolder2_ContentPlaceHolder3_GridView1" style="border-collapse:collapse;">
+		<tr style="font-weight:bold;">
+			<th scope="col">&nbsp;</th><th scope="col" style="color:White;background-color:Blue;white-space:nowrap;">Item Id</th><th scope="col" style="white-space:nowrap;">Item Category</th><th scope="col" style="white-space:nowrap;">Category Id</th><th scope="col" style="white-space:nowrap;">Item</th><th scope="col" style="white-space:nowrap;">Manufacturer</th><th scope="col" style="white-space:nowrap;">Unit</th><th scope="col" style="white-space:nowrap;">Quantity</th><th scope="col" style="white-space:nowrap;">Selling Price</th><th scope="col" style="white-space:nowrap;">Added By</th><th scope="col" style="white-space:nowrap;">Created At</th><th scope="col" style="white-space:nowrap;">Status</th>
+		</tr><tr>
+			<td>
+                                    <input type="image" name="ctl00$ctl00$ContentPlaceHolder2$ContentPlaceHolder3$GridView1$ctl02$ctl00" src="Images/touchscreen.png" style="height:25px;width:25px;" />
+                                </td><td style="white-space:nowrap;">Fru-1</td><td style="white-space:nowrap;">Fruits</td><td style="white-space:nowrap;">1</td><td style="white-space:nowrap;">Apple</td><td style="white-space:nowrap;">N/A</td><td style="white-space:nowrap;">Kg</td><td style="white-space:nowrap;">56.00</td><td style="white-space:nowrap;">1,200.00</td><td style="white-space:nowrap;">Uwase Kevine</td><td style="white-space:nowrap;">2025-11-14 09:11:34</td><td style="white-space:nowrap;">Active</td>
+		</tr><tr>
+			<td>
+                                    <input type="image" name="ctl00$ctl00$ContentPlaceHolder2$ContentPlaceHolder3$GridView1$ctl03$ctl00" src="Images/touchscreen.png" style="height:25px;width:25px;" />
+                                </td><td style="white-space:nowrap;">Fru-2</td><td style="white-space:nowrap;">Fruits</td><td style="white-space:nowrap;">1</td><td style="white-space:nowrap;">Orange</td><td style="white-space:nowrap;">N/A</td><td style="white-space:nowrap;">kg</td><td style="white-space:nowrap;">0.00</td><td style="white-space:nowrap;">0.00</td><td style="white-space:nowrap;">Uwase Kevine</td><td style="white-space:nowrap;">2026-03-12 08:04:54</td><td style="white-space:nowrap;">Active</td>
+		</tr>
+	</table>
+</div>

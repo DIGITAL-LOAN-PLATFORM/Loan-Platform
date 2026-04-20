@@ -20,13 +20,19 @@ namespace Infrastructure.Repositories
         }
         public async Task<List<Guarantor>> GetAllAsync()
         {
-            return await _context.Guarantors.ToListAsync();
+            return await _context.Guarantors
+                .Include(g => g.LoanApplication)
+                .Include(g => g.GuarantorType)
+                .ToListAsync();
         }
         public async Task<Guarantor> GetByIdAsync(int id)
         {
-            var guarantor = await _context.Guarantors.FindAsync(id);
+            var guarantor = await _context.Guarantors
+                .Include(g => g.LoanApplication)
+                .Include(g => g.GuarantorType)
+                .FirstOrDefaultAsync(g => g.Id == id);
 
-            return guarantor ?? throw new KeyNotFoundException($"Borrower with ID {id} was not found.");
+            return guarantor ?? throw new KeyNotFoundException($"Guarantor with ID {id} was not found.");
         }
         public async Task CreateGuarantorAsync(CreateGuarantorDTO createGuarantorDTO)
         {
@@ -54,6 +60,7 @@ namespace Infrastructure.Repositories
 
                 Village = createGuarantorDTO.Village,
 
+                LoanApplicationId = createGuarantorDTO.LoanApplicationId
 
             };
 
@@ -88,6 +95,8 @@ namespace Infrastructure.Repositories
                 guarantor.Cell = updateGuarantorDTO.Cell;
 
                 guarantor.Village = updateGuarantorDTO.Village;
+
+                guarantor.LoanApplicationId = updateGuarantorDTO.LoanApplicationId;
 
             await _context.SaveChangesAsync();
 

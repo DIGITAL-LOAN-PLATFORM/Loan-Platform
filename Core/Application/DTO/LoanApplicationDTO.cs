@@ -20,7 +20,6 @@ namespace Application.DTO
         public string? Purpose { get; set; }
         public DateTime ApplicationDate { get; set; }
         public List<DocumentUploadDTO> ProvidedDocuments { get; set; } = new();
-        public CreateGuarantorDTO Guarantor { get; set; } = new();
     }
 
     public class UpdateLoanApplicationDTO
@@ -35,7 +34,6 @@ namespace Application.DTO
         public string? Purpose { get; set; }
         public DateTime ApplicationDate { get; set; }
         public List<DocumentUploadDTO> ProvidedDocuments { get; set; } = new();
-        public CreateGuarantorDTO Guarantor { get; set; } = new();
     }
 
     public class GetLoanApplicationDTO
@@ -54,6 +52,7 @@ namespace Application.DTO
         public string? Purpose { get; set; }
         public DateTime ApplicationDate { get; set; }
         public List<ProvidedDocument> ProvidedDocuments { get; set; } = new();
+        public List<Guarantor> Guarantors { get; set; } = new();
 
         //approval of status
         public string ApprovalStatus { get; set; } = "Pending";

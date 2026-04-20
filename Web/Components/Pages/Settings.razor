@@ -32,12 +32,12 @@
                 </MudStack>
                 <MudTable Items="_paymentTypes" Dense="true" Hover="true" Outlined="true">
                     <HeaderContent>
-                        <MudTh>Id</MudTh>
+                        @* <MudTh>Id</MudTh> *@
                         <MudTh>Name</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd>@context.Id</MudTd>
+                        @* <MudTd>@context.Id</MudTd> *@
                         <MudTd>@context.Name</MudTd>
                         <MudTd>
                             <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewPaymentTypeAsync(context)" />
@@ -61,12 +61,12 @@
                 </MudStack>
                 <MudTable Items="_paymentModalities" Dense="true" Hover="true" Outlined="true">
                     <HeaderContent>
-                        <MudTh>Id</MudTh>
+                        @* <MudTh>Id</MudTh> *@
                         <MudTh>Name</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd>@context.Id</MudTd>
+                        @* <MudTd>@context.Id</MudTd> *@
                         <MudTd>@context.Name</MudTd>
                         <MudTd>
                             <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewPaymentModalityAsync(context)" />
@@ -90,12 +90,12 @@
                 </MudStack>
                 <MudTable Items="_reasons" Dense="true" Hover="true" Outlined="true">
                     <HeaderContent>
-                        <MudTh>Id</MudTh>
+                        @* <MudTh>Id</MudTh> *@
                         <MudTh>Name</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd>@context.Id</MudTd>
+                        @* <MudTd>@context.Id</MudTd> *@
                         <MudTd>@context.Name</MudTd>
                         <MudTd>
                             <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewReasonAsync(context)" />
@@ -119,12 +119,12 @@
                 </MudStack>
                 <MudTable Items="_guarantorTypes" Dense="true" Hover="true" Outlined="true">
                     <HeaderContent>
-                        <MudTh>Id</MudTh>
+                        @* <MudTh>Id</MudTh> *@
                         <MudTh>Name</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd>@context.Id</MudTd>
+                        @* <MudTd>@context.Id</MudTd> *@
                         <MudTd>@context.Name</MudTd>
                         <MudTd>
                             <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewGuarantorTypeAsync(context)" />
@@ -148,14 +148,14 @@
                 </MudStack>
                 <MudTable Items="_loanProducts" Dense="true" Hover="true" Outlined="true">
                     <HeaderContent>
-                        <MudTh>Id</MudTh>
+                        @* <MudTh>Id</MudTh> *@
                         <MudTh>Name</MudTh>
                         <MudTh>Description</MudTh>
                         <MudTh>Interest Rate</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd>@context.Id</MudTd>
+                        @* <MudTd>@context.Id</MudTd> *@
                         <MudTd>@context.Name</MudTd>
                         <MudTd>@context.Description</MudTd>
                         <MudTd>@context.InterestRate</MudTd>
