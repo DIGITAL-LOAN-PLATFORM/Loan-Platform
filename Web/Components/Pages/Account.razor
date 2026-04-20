@@ -17,9 +17,26 @@
                 Add
             </MudButton>
         </MudStack>
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudText Typo="Typo.h5" GutterBottom="true">Summary</MudText>
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-3" Elevation="0" Color="Color.Default">
+                    <MudText Typo="Typo.subtitle2">Total Accounts</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Primary">@_accounts.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-3" Elevation="0" Color="Color.Default">
+                    <MudText Typo="Typo.subtitle2">Total Balance</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Success">@totalBalance.ToString()</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
         <MudTable Items="_accounts" Dense="true" Hover="true" Outlined="true">
             <HeaderContent>
-                <MudTh>ID</MudTh>
+                @* <MudTh>ID</MudTh> *@
                 <MudTh>NAME</MudTh>
                 <MudTh>PROVIDER</MudTh>
                 <MudTh>NUMBER</MudTh>
@@ -28,12 +45,12 @@
                 <MudTh>ACTIONS</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd>@context.Id</MudTd>
+                @* <MudTd>@context.Id</MudTd> *@
                 <MudTd>@context.Name</MudTd>
                 <MudTd>@context.Provider</MudTd>
                 <MudTd>@context.Number</MudTd>
                 <MudTd>@context.Type.ToString()</MudTd>
-                <MudTd>@context.Balance.ToString("C")</MudTd>
+                <MudTd>@context.Balance.ToString("C2")</MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="@((e) => ViewAccountAsync(context))" />
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => EditAccountAsync(context))" />
@@ -46,10 +63,12 @@
 
 @code {
     private List<Domain.Entities.Account> _accounts = new();
+    private decimal totalBalance = 0;
 
     protected override async Task OnInitializedAsync()
     {
         _accounts = await AccountService.GetAllAsync();
+        totalBalance = _accounts.Sum(a => a.Balance);
     }
 
     private async Task AddAccountAsync()

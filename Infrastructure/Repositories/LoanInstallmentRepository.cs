@@ -61,5 +61,13 @@ namespace Infrastructure.Repositories
             }
             return installment;
         }
+
+        public async Task<List<LoanInstallment>> GetLoanInstallmentsByDisbursementIdAsync(int disbursementId)
+        {
+            return await _context.LoanInstallments
+                .Where(i => i.LoanDisbursmentId == disbursementId)
+                .OrderBy(i => i.DueDate)
+                .ToListAsync();
+        }
     }
 }

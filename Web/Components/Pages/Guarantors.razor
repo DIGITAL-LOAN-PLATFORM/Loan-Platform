@@ -24,7 +24,8 @@
                 <MudTh>NAME</MudTh>
                 <MudTh>EMAIL</MudTh>
                 <MudTh>PHONE</MudTh>
-                <MudTh>GUARANTORTYPE</MudTh>
+                <MudTh>GUARANTOR TYPE</MudTh>
+                <MudTh>LOAN APPLICATION</MudTh>
                 <MudTh>ADDRESS</MudTh>
                 <MudTh>ACTIONS</MudTh>
             </HeaderContent>
@@ -33,6 +34,8 @@
                 <MudTd>@context.Name</MudTd>
                 <MudTd>@context.Email</MudTd>
                 <MudTd>@context.Phone</MudTd>
+                <MudTd>@context.GuarantorType?.Name</MudTd>
+                <MudTd>@context.LoanApplication?.ApplicationNumber</MudTd>
                 <MudTd>@($"{context.Province}, {context.District}")</MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewGuarantorAsync(context)" />
@@ -70,7 +73,10 @@
                 Name = dto.Name,
                 Email = dto.Email,
                 Phone = dto.Phone,
-                DOB = dto.DOB ,
+                GuarantorTypeId = dto.GuarantorType?.Id,
+                GuarantorType = dto.GuarantorType,
+                DOB = dto.DOB,
+                LoanApplicationId = dto.LoanApplicationId,
                 Province = dto.Province,
                 District = dto.District,
                 Sector = dto.Sector,
@@ -93,7 +99,9 @@
             Name = guarantor.Name ?? "",
             Email = guarantor.Email ?? "",
             Phone = guarantor.Phone ?? "",
-            DOB = guarantor.DOB ?? default ,
+            GuarantorType = guarantor.GuarantorType,
+            DOB = guarantor.DOB ?? default,
+            LoanApplicationId = guarantor.LoanApplicationId,
             Province = guarantor.Province ?? "",
             District = guarantor.District ?? "",
             Sector = guarantor.Sector ?? "",
@@ -122,11 +130,13 @@
         var dto = new UpdateGuarantorDTO
         {
             Id = guarantor.Id,
-            IdentificationNumber = guarantor.IdentificationNumber ?? "" ,
+            IdentificationNumber = guarantor.IdentificationNumber ?? "",
             Name = guarantor.Name ?? "",
             Email = guarantor.Email ?? "",
             Phone = guarantor.Phone ?? "",
-            DOB = guarantor.DOB ?? default  ,
+            GuarantorType = guarantor.GuarantorType,
+            DOB = guarantor.DOB ?? default,
+            LoanApplicationId = guarantor.LoanApplicationId,
             Province = guarantor.Province ?? "",
             District = guarantor.District ?? "",
             Sector = guarantor.Sector ?? "",

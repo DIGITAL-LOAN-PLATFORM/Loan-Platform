@@ -1,14 +1,24 @@
 @using Application.DTO
 @using Application.Interfaces
 @using Application.Services.GuarantorTypes
+@using Application.Services.LoanApplications
 @using Domain.Entities
 @inject ILocationService LocationService
 @inject IGuarantorTypeService GuarantorTypeService
+@inject ILoanApplicationService LoanApplicationService
 
 <MudDialog>
     <DialogContent>
         <MudForm @ref="_form" @bind-IsValid="_success" ValidationDelay="0">
             <MudGrid>
+                <MudItem xs="12">
+                    <MudSelect @bind-Value="Model.LoanApplicationId" Label="Loan Application" Required="true" ReadOnly="IsReadOnly">
+                        @foreach (var app in _loanApplications)
+                        {
+                            <MudSelectItem Value="@app.Id">@($"{app.ApplicationNumber} - {app.Borrower?.FirstName} {app.Borrower?.LastName}")</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="Model.IdentificationNumber" Label="ID Number" Required="true" ReadOnly="IsReadOnly" MaxLength="16" Validation="@(new Func<string, IEnumerable<string>>(ValidateIdNumber))" />
                 </MudItem>
@@ -107,6 +117,7 @@
     private List<Sector> _sectors = new();
     private List<Cell> _cells = new();
     private List<Village> _villages = new();
+    private List<LoanApplication> _loanApplications = new();
 
     
 
@@ -125,6 +136,7 @@
     {
         @* ON OnInitialized of Guarantor types *@
         _guarantorTypes = await GuarantorTypeService.GetAllAsync();
+        _loanApplications = await LoanApplicationService.GetAllLoanApplicationAsync();
         if (Model.GuarantorType != null)
         {
             GuarantorTypeId = Model.GuarantorType.Id;

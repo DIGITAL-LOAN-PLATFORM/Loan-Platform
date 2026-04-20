@@ -45,7 +45,7 @@
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditApplicationAsync(context)" />
                 }
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteApplicationAsync(context)" />
+                @* <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteApplicationAsync(context)" /> *@
             </MudTd>
         </RowTemplate>
         <PagerContent>
@@ -73,6 +73,7 @@
     private Color GetStatusColor(string status) => status switch
     {
         "Approved" => Color.Success,
+        "Disbursed" => Color.Success,
         "Rejected" => Color.Error,
         "Closed" => Color.Default,
         _ => Color.Warning
@@ -126,8 +127,7 @@
                     InterestRate = app.InterestRate,
                     Duration = app.Duration, 
                     Purpose = app.Purpose, 
-                    ApplicationDate = app.ApplicationDate,
-                    Guarantor = guarantorDto
+                    ApplicationDate = app.ApplicationDate
                 } 
             }
         };
@@ -143,22 +143,6 @@
 
     private async Task ViewDetailsAsync(LoanAppEntity app)
     {
-        var g = app.Guarantors?.FirstOrDefault();
-        var guarantorDto = g != null ? new CreateGuarantorDTO
-        {
-            IdentificationNumber = g.IdentificationNumber ?? string.Empty,
-            Name = g.Name ?? string.Empty,
-            DOB = g.DOB ?? default,
-            Email = g.Email ?? string.Empty,
-            Phone = g.Phone ?? string.Empty,
-            GuarantorType = g.GuarantorType,
-            Province = g.Province ?? string.Empty,
-            District = g.District ?? string.Empty,
-            Sector = g.Sector ?? string.Empty,
-            Cell = g.Cell ?? string.Empty,
-            Village = g.Village ?? string.Empty
-        } : new();
-
         var parameters = new DialogParameters<LoanApplicationDialog>
         {
             { x => x.Title, "Application Details" },
@@ -173,16 +157,16 @@
                     InterestRate = app.InterestRate,
                     Duration = app.Duration, 
                     Purpose = app.Purpose, 
-                    ApplicationDate = app.ApplicationDate,
-                    Guarantor = guarantorDto
+                    ApplicationDate = app.ApplicationDate
                 } 
-            }
+            },
+            { x => x.Guarantors, app.Guarantors?.ToList() ?? new List<Guarantor>() }
         };
 
         await DialogService.ShowAsync<LoanApplicationDialog>("Application Details", parameters);
     }
 
-    private async Task DeleteApplicationAsync(LoanAppEntity app)
+    @* private async Task DeleteApplicationAsync(LoanAppEntity app)
     {
         var result = await DialogService.ShowMessageBoxAsync("Confirm Delete", $"Are you sure you want to delete application {app.ApplicationNumber}?", "Delete", "Cancel");
         if (result == true)
@@ -191,5 +175,5 @@
             await LoadDataAsync();
             Snackbar.Add("Application deleted.", Severity.Success);
         }
-    }
+    } *@
 }

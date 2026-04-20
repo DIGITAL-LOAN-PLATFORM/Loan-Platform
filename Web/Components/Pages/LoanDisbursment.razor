@@ -26,10 +26,10 @@
                                   AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="250"
                                   OnDebounceIntervalElapsed="OnSearchChanged" />
                 </MudItem>
-                <MudItem xs="12" sm="6" Class="d-flex justify-end">
+                @* <MudItem xs="12" sm="6" Class="d-flex justify-end">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                                OnClick="@(() => NavigateToDisbursmentPage())">Disburs Loan</MudButton>
-                </MudItem>
+                </MudItem> *@
             </MudGrid>
         </MudPaper>
 
@@ -53,10 +53,18 @@
                         <MudChip T="string" Color="GetStatusColor(context.ApprovalStatus)" Size="Size.Small">@context.ApprovalStatus</MudChip>
                     </MudTd>
                     <MudTd DataLabel="Actions">
-                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="() => NavigateToDisbursmentPage(context.Id)"
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="() => NavigateToDisbursmentPage(context)"
                                      title="View Details" />
-                        <MudIconButton Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Small" OnClick="() => OpenDisbursmentDialogAsync(context)"
-                                     title="Disburse" Disabled="@(context.ApprovalStatus != "Approved")" />
+                        @if (context.ApprovalStatus == "Disbursed")
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success"
+                                         title="Already Disbursed" Disabled="true" />
+                        }
+                        else
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Small" OnClick="() => OpenDisbursmentDialogAsync(context)"
+                                         title="Disburse" Disabled="@(context.ApprovalStatus != "Approved")" />
+                        }
                     </MudTd>
                 </RowTemplate>
                 <NoRecordsContent>
@@ -89,7 +97,7 @@
         try
         {
             var applications = await _loanApplicationService.GetAllLoanApplicationAsync();
-            _loanApplications = applications.Where(a => a.ApprovalStatus == "Approved").ToList();
+            _loanApplications = applications.Where(a => a.ApprovalStatus == "Approved" || a.ApprovalStatus == "Disbursed").ToList();
         }
         catch (Exception ex)
         {
@@ -122,14 +130,32 @@
         }
     }
 
-    private void NavigateToDisbursmentPage(int? applicationId = null)
+    private async Task NavigateToDisbursmentPage(LoanAppEntity? app = null)
     {
-        // For viewing details, we can potentially use another dialog or a details page
-        // For now, let's keep the navigation but ensure it's not the same page
-        if (applicationId.HasValue)
+        if (app is null)
+            return;
+
+        var parameters = new DialogParameters<LoanApplicationDialog>
         {
-             _snackbar.Add("View details for " + applicationId, Severity.Info);
-        }
+            { x => x.Title, "Application Details" },
+            { x => x.ApplicationId, app.Id },
+            { x => x.IsReadOnly, true },
+            { x => x.Model, new CreateLoanApplicationDTO
+                {
+                    ProductId = app.ProductId,
+                    BorrowerId = app.BorrowerId,
+                    ModalityId = app.ModalityId,
+                    RequestedAmount = app.RequestedAmount,
+                    InterestRate = app.InterestRate,
+                    Duration = app.Duration,
+                    Purpose = app.Purpose,
+                    ApplicationDate = app.ApplicationDate
+                }
+            },
+            { x => x.Guarantors, app.Guarantors?.ToList() ?? new List<Guarantor>() }
+        };
+
+        await _dialogService.ShowAsync<LoanApplicationDialog>("Application Details", parameters);
     }
 
     private Color GetStatusColor(string status)
@@ -137,6 +163,7 @@
         return status switch
         {
             "Approved" => Color.Success,
+            "Disbursed" => Color.Success,
             "Pending" => Color.Warning,
             "Rejected" => Color.Error,
             _ => Color.Default
