@@ -1,4 +1,5 @@
 @page "/loan-payments"
+@page "/loan-payments/{LoanApplicationId:int?}"
 @using Application.DTO
 @using Domain.Entities
 @using Application.Services.LoanInstallments
@@ -41,6 +42,7 @@
                       Loading="@_isLoading" LoadingProgressColor="Color.Primary">
                 <HeaderContent>
                     <MudTh>Borrower</MudTh>
+                    <MudTh>Application</MudTh>
                     <MudTh>Disbursement ID</MudTh>
                     <MudTh>Due Date</MudTh>
                     <MudTh>Amount Due</MudTh>
@@ -52,6 +54,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Borrower">@($"{context.LoanDisbursment?.LoanApplication?.Borrower?.FirstName} {context.LoanDisbursment?.LoanApplication?.Borrower?.LastName}")</MudTd>
+                    <MudTd DataLabel="Application">@context.LoanDisbursment?.LoanApplication?.ApplicationNumber</MudTd>
                     <MudTd DataLabel="Disbursement ID">@context.LoanDisbursmentId</MudTd>
                     <MudTd DataLabel="Due Date">@context.DueDate.ToShortDateString()</MudTd>
                     <MudTd DataLabel="Amount Due">@context.AmountDue.ToString("C")</MudTd>
@@ -80,6 +83,8 @@
 </MudContainer>
 
 @code {
+    [Parameter] public int? LoanApplicationId { get; set; }
+
     private List<LoanInstallment> _allInstallments = new();
     private List<LoanInstallment> _filteredInstallments = new();
     private bool _isLoading = true;
@@ -133,6 +138,11 @@
                 query = query.Where(i => i.Status == _filterStatus);
         }
 
+        if (LoanApplicationId.HasValue)
+        {
+            query = query.Where(i => i.LoanDisbursment?.LoanApplicationId == LoanApplicationId.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(_searchString))
         {
             query = query.Where(i => 
@@ -140,7 +150,10 @@
                 (i.LoanDisbursment?.LoanApplication?.Borrower?.LastName?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false));
         }
 
-        _filteredInstallments = query.OrderBy(i => i.DueDate).ToList();
+        _filteredInstallments = query
+            .OrderBy(i => i.LoanDisbursment?.LoanApplicationId)
+            .ThenBy(i => i.DueDate)
+            .ToList();
     }
 
     private async Task OpenPaymentDialogAsync(LoanInstallment installment)

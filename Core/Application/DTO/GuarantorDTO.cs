@@ -11,6 +11,7 @@ namespace Application.DTO
         public string Phone { get; set; } = string.Empty;
         public int? GuarantorTypeId { get; set; }
         public GuarantorType? GuarantorType { get; set; }
+        public int LoanApplicationId { get; set; }
 
         // Administrative location hierarchy
         public string Province { get; set; } = string.Empty;
@@ -31,6 +32,7 @@ namespace Application.DTO
         public string Phone { get; set; } = string.Empty;
         public int? GuarantorTypeId { get; set; }
         public GuarantorType? GuarantorType { get; set; }
+        public int LoanApplicationId { get; set; }
 
         // Administrative location hierarchy
         public string Province { get; set; } = string.Empty;
