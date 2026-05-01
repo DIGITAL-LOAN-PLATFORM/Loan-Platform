@@ -22,7 +22,7 @@ namespace Application.Services.LoanApplications
         }
 
         //GetLoanApplicationByIdAsync
-        public async Task<LoanApplication> GetLoanApplicationByIdAsync(int id)
+        public async Task<LoanApplication?> GetLoanApplicationByIdAsync(int id)
         {
             return await _loanApplication.GetLoanApplicationByIdAsync(id);
         }

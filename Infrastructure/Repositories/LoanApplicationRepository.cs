@@ -24,20 +24,20 @@ namespace Infrastructure.Repositories
         {
             return await _context.LoanApplications
                 .Include(l => l.Borrower)
-                .Include(l => l.loanProduct)
-                .Include(l => l.paymentModality)
+                .Include(l => l.LoanProductSetting)
+                .Include(l => l.PaymentModality)
                 .Include(l => l.Guarantors)
                 .ThenInclude(g => g.GuarantorType)
                 .ToListAsync();
         }
 
         //GetLoanApplicationByIdAsync
-        public async Task<LoanApplication> GetLoanApplicationByIdAsync(int id)
+        public async Task<LoanApplication?> GetLoanApplicationByIdAsync(int id)
         {
             return await _context.LoanApplications
                 .Include(l => l.Borrower)
-                .Include(l => l.loanProduct)
-                .Include(l => l.paymentModality)
+                .Include(l => l.LoanProductSetting)
+                .Include(l => l.PaymentModality)
                 .Include(l => l.ProvidedDocuments)
                 .Include(l => l.Guarantors)
                 .ThenInclude(g => g.GuarantorType)
@@ -58,11 +58,14 @@ namespace Infrastructure.Repositories
             var loanApplication = new LoanApplication
             {
                 ApplicationNumber = applicationNumber,
-                ProductId = createLoanApplicationDTO.ProductId,
+                ProductSettingId = createLoanApplicationDTO.ProductSettingId,
                 BorrowerId = createLoanApplicationDTO.BorrowerId,
                 ModalityId = createLoanApplicationDTO.ModalityId,
                 RequestedAmount = createLoanApplicationDTO.RequestedAmount,
                 InterestRate = createLoanApplicationDTO.InterestRate,
+                MaintenanceFee = createLoanApplicationDTO.MaintenanceFee,
+                ProcessingFee = createLoanApplicationDTO.ProcessingFee,
+                InsuranceFee = createLoanApplicationDTO.InsuranceFee,
                 Duration = createLoanApplicationDTO.Duration,
                 Purpose = createLoanApplicationDTO.Purpose,
                 ApplicationDate = DateTime.Now,
@@ -112,7 +115,7 @@ namespace Infrastructure.Repositories
                 
             if (loanApplication != null)
             {
-                loanApplication.ProductId = updateLoanApplicationDTO.ProductId;
+                loanApplication.ProductSettingId = updateLoanApplicationDTO.ProductSettingId;
                 loanApplication.BorrowerId = updateLoanApplicationDTO.BorrowerId;
                 loanApplication.ModalityId = updateLoanApplicationDTO.ModalityId;
                 loanApplication.RequestedAmount = updateLoanApplicationDTO.RequestedAmount;

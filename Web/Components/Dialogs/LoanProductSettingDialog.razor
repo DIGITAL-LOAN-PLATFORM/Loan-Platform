@@ -1,0 +1,120 @@
+@using Application.DTO
+@using Domain.Entities
+
+<MudDialog>
+    @* <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@Title</MudText>
+        @if (!IsReadOnly)
+        {
+            <MudForm @ref="_form">
+                <MudSelect @bind-Value="Model.LoanProduct" Label="Loan Product" Variant="Variant.Outlined" Required="true" RequiredError="Loan Product is required." Class="mb-3">
+                    @if (LoanProducts != null)
+                    {
+                        @foreach (var product in LoanProducts)
+                        {
+                            <MudSelectItem Value="product">@product.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudNumericField @bind-Value="Model.InterestRate" Label="Interest Rate (%)" Variant="Variant.Outlined" Required="true" RequiredError="Interest rate is required." HideSpinButtons="true" Min="0" Max="100" Step=".01M" Class="mb-3" />
+                <MudNumericField @bind-Value="Model.MaintenanceFee" Label="Maintenance Fee (%)" Variant="Variant.Outlined" HideSpinButtons="true" Min="0" Step=".01M" Class="mb-3" />
+                <MudNumericField @bind-Value="Model.ProcessingFee" Label="Processing Fee (%)" Variant="Variant.Outlined" HideSpinButtons="true" Min="0" Step=".01M" Class="mb-3" />
+                <MudNumericField @bind-Value="Model.InsuranceFee" Label="Insurance Fee (%)" Variant="Variant.Outlined" HideSpinButtons="true" Min="0" Step=".01M" Class="mb-3" />
+                <MudSelect @bind-Value="Model.Status" Label="Status" Variant="Variant.Outlined" Required="true" Class="mb-3">
+                    <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                    <MudSelectItem Value="@("Inactive")">Inactive</MudSelectItem>
+                </MudSelect>
+            </MudForm>
+        }
+        else
+        {
+            <MudStack>
+                <div>
+                    <MudText Typo="Typo.subtitle2">Loan Product</MudText>
+                    <MudText>@Model.LoanProduct?.Name</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.subtitle2">Interest Rate</MudText>
+                    <MudText>@Model.InterestRate%</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.subtitle2">Maintenance Fee</MudText>
+                    <MudText>@Model.MaintenanceFee%</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.subtitle2">Processing Fee</MudText>
+                    <MudText>@Model.ProcessingFee%</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.subtitle2">Insurance Fee</MudText>
+                    <MudText>@Model.InsuranceFee%</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.subtitle2">Status</MudText>
+                    <MudText>@Model.Status</MudText>
+                </div>
+            </MudStack>
+        }
+    </DialogContent> *@
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@Title</MudText>
+        <MudForm @ref="_form">
+                <MudSelect @bind-Value="Model.LoanProduct" Label="Loan Product" Variant="Variant.Outlined" Required="true" RequiredError="Loan Product is required." Class="mb-3">
+                    @if (LoanProducts != null)
+                    {
+                        @foreach (var product in LoanProducts)
+                        {
+                            <MudSelectItem Value="product">@product.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudNumericField @bind-Value="Model.InterestRate" Label="Interest Rate (%)" Variant="Variant.Outlined" Required="true" RequiredError="Interest rate is required." HideSpinButtons="true" Min="0" Max="100" Step=".01M" Class="mb-3" />
+                <MudNumericField @bind-Value="Model.ProcessingFee" Label="Processing Fee (%)" Variant="Variant.Outlined" HideSpinButtons="true" Min="0" Step=".01M" Class="mb-3" />
+                <MudNumericField @bind-Value="Model.InsuranceFee" Label="Insurance Fee (%)" Variant="Variant.Outlined" HideSpinButtons="true" Min="0" Step=".01M" Class="mb-3" />
+                <MudNumericField @bind-Value="Model.MaintenanceFee" Label="Maintenance Fee (%)" Variant="Variant.Outlined" HideSpinButtons="true" Min="0" Step=".01M" Class="mb-3" />
+                </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Color="Color.Default">@(IsReadOnly ? "Close" : "Cancel")</MudButton>
+        @if (!IsReadOnly)
+        {
+            <MudButton OnClick="Save" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = "Loan Product Setting";
+
+    [Parameter]
+    public LoanProductSettingDTO Model { get; set; } = new();
+
+    [Parameter]
+    public bool IsReadOnly { get; set; } = false;
+
+    [Parameter]
+    public List<LoanProduct>? LoanProducts { get; set; }
+
+    private MudForm? _form;
+
+    private async Task Save()
+    {
+        if (_form != null)
+        {
+            await _form.ValidateAsync();
+            if (_form.IsValid)
+            {
+                MudDialog.Close(DialogResult.Ok(Model));
+            }
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

@@ -5,7 +5,7 @@
         <MudForm @ref="_form">
             <MudTextField @bind-Value="LoanProduct.Name" Label="Name" Variant="Variant.Outlined" Required="true" RequiredError="Name is required." Class="mb-3" />
             <MudTextField @bind-Value="LoanProduct.Description" Label="Description" Variant="Variant.Outlined" Lines="3" Class="mb-3" />
-            <MudNumericField @bind-Value="LoanProduct.InterestRate" Label="Interest Rate (%)" Variant="Variant.Outlined" Required="true" RequiredError="Interest rate is required." HideSpinButtons="true" Min="0" Max="100" Step=".01M" />
+            @* <MudNumericField @bind-Value="LoanProduct.InterestRate" Label="Interest Rate (%)" Variant="Variant.Outlined" Required="true" RequiredError="Interest rate is required." HideSpinButtons="true" Min="0" Max="100" Step=".01M" /> *@
         </MudForm>
     </DialogContent>
     <DialogActions>

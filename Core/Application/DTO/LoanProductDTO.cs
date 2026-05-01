@@ -4,7 +4,8 @@ namespace Application.DTO
     {
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public decimal InterestRate { get; set; }
+        public string Status { get; set; } = "Active";
+        public DateTime CreatedAt { get; set; }
     }
 
     public class UpdateLoanProductDTO
@@ -12,7 +13,8 @@ namespace Application.DTO
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public decimal InterestRate { get; set; }
+        public string Status { get; set; } = "Active";
+        public DateTime CreatedAt { get; set; }
     }
 
     public class DeleteLoanProductDTO
@@ -25,6 +27,7 @@ namespace Application.DTO
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public decimal InterestRate { get; set; }
+        public string Status { get; set; } = "Active";
+        public DateTime CreatedAt { get; set; }
     }
 }

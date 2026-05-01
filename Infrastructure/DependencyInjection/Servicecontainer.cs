@@ -23,16 +23,21 @@ namespace Infrastructure.DependencyInjection
             services.AddScoped<IReason, ReasonRepository>();
             services.AddScoped<IGuarantorType, GuarantorTypeRepository>();
             services.AddScoped<IGuarantor, GuarantorRepository>();
+            services.AddScoped<ICollateral, CollateralRepository>();
             services.AddScoped<IBorrower, BorrowerRepository>();
             services.AddScoped<IAccount, AccountRepository>();
             services.AddScoped<ILoanProduct, LoanProductRepository>();
+            services.AddScoped<ILoanProductSetting, LoanProductSettingRepository>();
             services.AddScoped<IRequiredDocument, RequiredDocumentRepository>();
             services.AddScoped<ILoanApplication, LoanApplicationRepository>();
             services.AddScoped<ILoanDisbursment, LoanDisbursmentRepository>();
             services.AddScoped<ILoanInstallment, LoanInstallmentRepository>();
             services.AddScoped<ILoanPayment, LoanPaymentRepository>();
 
+            // Add application services
+            services.AddScoped<Application.Services.Borrowers.IBorrowerService, Application.Services.Borrowers.BorrowerService>();
+
             return services;
-        }
     }
+}
 }

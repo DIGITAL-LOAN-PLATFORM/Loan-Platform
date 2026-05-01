@@ -1,4 +1,4 @@
-@page "/borrower"
+@* @page "/borrower"
 @using Application.DTO
 @using Application.Services.Borrowers
 @using Domain.Entities
@@ -37,7 +37,7 @@
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewBorrowerAsync(context)" />
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditBorrowerAsync(context)" />
-                    @* <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteBorrowerAsync(context)" /> *@
+                    @* <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteBorrowerAsync(context)" /> 
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -175,6 +175,106 @@
             await BorrowerService.DeleteBorrowerAsync(borrower.Id);
             await OnInitializedAsync();
             Snackbar.Add("Borrower deleted successfully", Severity.Success);
+        }
+    } 
+} *@
+
+@page "/borrowers"
+@using Application.Services.Borrowers
+@using Domain.Entities
+@using Application.Interfaces
+@using Application.DTO
+@using Entity = Domain.Entities 
+
+@inject IBorrowerService BorrowerService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8">
+    <div class="d-flex align-center justify-space-between mb-6">
+        <MudText Typo="Typo.h5" Style="font-weight: 800; color: #1B2559;">Borrowers</MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Add" 
+                   OnClick="OpenCreateDialog">
+            Add Borrower
+        </MudButton>
+    </div>
+
+    @* Explicitly define the Type T as the Domain Entity *@
+    <MudDataGrid T="Entity.Borrower" Items="@_borrowerList" Hover="true" Elevation="0" Class="rounded-xl">
+        <Columns>
+
+            @* <PropertyColumn Property="x => x.LoanApplication.ApplicationCode" Title="Asset Name" /> *@
+            <PropertyColumn Property="x => x.IdentificationNumber" Title="ID Number" />
+            <TemplateColumn Title="Location">
+                <CellTemplate>
+                    @($"{context.Item.FirstName}, {context.Item.LastName}")
+                </CellTemplate>
+            </TemplateColumn>
+            <PropertyColumn Property="x => x.Gender" Title="Gender" />
+            <PropertyColumn Property="x => x.PhoneNumber" Title="Phone" />
+            <PropertyColumn Property="x => x.Email" Title="Email" />
+            <TemplateColumn Title="Location">
+                <CellTemplate>
+                    @($"{context.Item.Province}, {context.Item.District}")
+                </CellTemplate>
+            </TemplateColumn>
+
+            <TemplateColumn CellClass="d-flex justify-end">
+                <CellTemplate>
+                     @* <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                   Size="Size.Small" 
+                                   OnClick="@(() => OpenEditDialog(context.Item.Id))"/> *@
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                   Color="Color.Error" 
+                                   Size="Size.Small" />
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+        <PagerContent>
+            <MudDataGridPager T="Entity.Borrower" />
+        </PagerContent>
+    </MudDataGrid>
+</MudContainer>
+
+@code {
+    // Using full namespace to avoid 'Web.Components.Pages.Collateral' conflict
+    private List<Entity.Borrower> _borrowerList = new();
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        // This calls your Repository.GetAllCollateralsAsync()
+        _borrowerList = await BorrowerService.GetAllAsync();
+        StateHasChanged();
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<BorrowerDialog>("Register New Borrower", options);
+        var result = await dialog.Result;
+        
+        if (result != null && !result.Canceled) 
+        {
+            await LoadData();
+        }
+    }
+
+    @* private async Task OpenEditDialog(int id)
+    {
+        var parameters = new DialogParameters { ["Id"] = id };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        
+        // You would create an EditCollateralDialog similar to your Create dialog
+        var dialog = await DialogService.ShowAsync<BorrowerDialog>("Update borrower", parameters, options);
+        var result = await dialog.Result;
+        
+        if (result != null && !result.Canceled) 
+        {
+            await LoadData();
         }
     } *@
 }

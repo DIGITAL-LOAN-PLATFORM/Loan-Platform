@@ -1,4 +1,4 @@
-@page "/account"
+@* @page "/account"
 @using Application.DTO
 @using Application.Services.Accounts
 @using Domain.Entities
@@ -37,7 +37,7 @@
         <MudTable Items="_accounts" Dense="true" Hover="true" Outlined="true">
             <HeaderContent>
                 @* <MudTh>ID</MudTh> *@
-                <MudTh>NAME</MudTh>
+                @* <MudTh>NAME</MudTh>
                 <MudTh>PROVIDER</MudTh>
                 <MudTh>NUMBER</MudTh>
                 <MudTh>TYPE</MudTh>
@@ -46,7 +46,7 @@
             </HeaderContent>
             <RowTemplate>
                 @* <MudTd>@context.Id</MudTd> *@
-                <MudTd>@context.Name</MudTd>
+                @* <MudTd>@context.Name</MudTd>
                 <MudTd>@context.Provider</MudTd>
                 <MudTd>@context.Number</MudTd>
                 <MudTd>@context.Type.ToString()</MudTd>
@@ -64,6 +64,7 @@
 @code {
     private List<Domain.Entities.Account> _accounts = new();
     private decimal totalBalance = 0;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -157,4 +158,179 @@
             _accounts = await AccountService.GetAllAsync();
         }
     }
+} *@    
+
+@page "/account"
+@using Application.Services.Accounts
+@using Domain.Entities
+@using Application.Interfaces
+@using Entity = Domain.Entities 
+@using Application.DTO
+
+@inject IAccountService AccountService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8">
+    <div class="d-flex align-center justify-space-between mb-6">
+        <MudText Typo="Typo.h5" Style="font-weight: 800; color: #1B2559;">Account</MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Add" 
+                   OnClick="AddAccountAsync">
+            Add Account
+        </MudButton>
+    </div>
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudText Typo="Typo.h5" GutterBottom="true">Summary</MudText>
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-3" Elevation="0" Color="Color.Default">
+                    <MudText Typo="Typo.subtitle2">Total Accounts</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Primary">@_accountList.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-3" Elevation="0" Color="Color.Default">
+                    <MudText Typo="Typo.subtitle2">Total Balance</MudText>
+                    <MudText Typo="Typo.h5" Color="Color.Success">@totalBalance.ToString()</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @* Explicitly define the Type T as the Domain Entity *@
+    <MudDataGrid T="Entity.Account" Items="@_accountList" Hover="true" Elevation="0" Class="rounded-xl">
+        <Columns>
+
+            @* <PropertyColumn Property="x => x.LoanApplication.ApplicationCode" Title="Asset Name" /> *@
+            <PropertyColumn Property="x => x.Name" Title="Account Name" />
+            <PropertyColumn Property="x => x.Provider" Title="Provider" />
+            <PropertyColumn Property="x => x.Number" Title="Number" />
+            <PropertyColumn Property="x => x.Type" Title="Type" />
+            
+            <TemplateColumn Title="Value">
+                <CellTemplate>
+                    <MudText Typo="Typo.body2" Color="Color.Success" Style="font-weight: bold">
+                        @context.Item.Balance.ToString("N0")
+                    </MudText>
+                </CellTemplate>
+            </TemplateColumn>
+
+            <TemplateColumn CellClass="d-flex justify-end">
+                <CellTemplate>
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="@((e) => ViewAccountAsync(context.Item))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@((e) => EditAccountAsync(context.Item))" />
+                    @* <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@((e) => DeleteAccountAsync(context.Item))" /> *@
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+        <PagerContent>
+            <MudDataGridPager T="Entity.Account" />
+        </PagerContent>
+    </MudDataGrid>
+</MudContainer>
+
+@code {
+    // Using full namespace to avoid 'Web.Components.Pages.Collateral' conflict
+    private List<Entity.Account> _accountList = new();
+    private decimal totalBalance = 0;
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        // This calls your Repository.GetAllAccountsAsync()
+        _accountList = await AccountService.GetAllAsync();
+        totalBalance = _accountList.Sum(a => a.Balance);
+        StateHasChanged();
+    }
+
+    private async Task AddAccountAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Model", new CreateAccountDTO() },
+            { "IsReadOnly", false }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AccountDialog>("Add Account", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            Snackbar.Add("Account added successfully!", Severity.Success);
+            _accountList = await AccountService.GetAllAsync();
+            totalBalance = _accountList.Sum(a => a.Balance);
+        }
+    }
+    private async Task ViewAccountAsync(Entity.Account account)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Model", new CreateAccountDTO
+                {
+                    Name = account.Name,
+                    Provider = account.Provider,
+                    Number = account.Number,
+                    Type = (int)account.Type,
+                    Balance = account.Balance
+                }
+            },
+            { "IsReadOnly", true }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AccountDialog>("View Account", parameters, options);
+        await dialog.Result;
+    }
+    private async Task EditAccountAsync(Entity.Account account)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Model", new CreateAccountDTO
+                {
+                    Name = account.Name,
+                    Provider = account.Provider,
+                    Number = account.Number,
+                    Type = (int)account.Type,
+                    Balance = account.Balance
+                }
+            },
+            { "AccountId", account.Id },
+            { "IsReadOnly", false }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AccountDialog>("Edit Account", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            Snackbar.Add("Account updated successfully!", Severity.Success);
+            _accountList = await AccountService.GetAllAsync();
+        }
+    }
+
+        @* private async Task DeleteAccountAsync(Entity.Account account)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", "Confirm Delete" },
+            { "Message", $"Are you sure you want to delete the account '{account.Name}'?" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Confirm Delete", parameters);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            await AccountService.DeleteAccountAsync(account.Id);
+            Snackbar.Add("Account deleted successfully!", Severity.Success);
+            _accountList = await AccountService.GetAllAsync();
+        }
+    } *@
+
+
 }

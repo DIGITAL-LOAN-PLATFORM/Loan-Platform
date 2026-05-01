@@ -33,7 +33,7 @@ namespace Infrastructure.Repositories
             {
                 Name = createLoanProductDTO.Name,
                 Description = createLoanProductDTO.Description,
-                InterestRate = createLoanProductDTO.InterestRate,
+                Status = createLoanProductDTO.Status,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -48,7 +48,7 @@ namespace Infrastructure.Repositories
             {
                 loanProduct.Name = updateLoanProductDTO.Name;
                 loanProduct.Description = updateLoanProductDTO.Description;
-                loanProduct.InterestRate = updateLoanProductDTO.InterestRate;
+                loanProduct.Status = updateLoanProductDTO.Status;
 
                 await _context.SaveChangesAsync();
             }

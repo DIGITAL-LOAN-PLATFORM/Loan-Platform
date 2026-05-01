@@ -5,14 +5,17 @@ namespace Domain.Entities
     {
         public int Id { get; set; }
         public string ApplicationNumber { get; set; } = string.Empty;
-        public int ProductId { get; set; }
-        public LoanProduct? loanProduct{ get; set; }
+        public int ProductSettingId { get; set; }
+        public LoanProductSetting? LoanProductSetting { get; set; }
         public int BorrowerId { get; set; }
-        public Borrower? Borrower{ get; set; }
-        public int ModalityId { get; set;}
-        public PaymentModality? paymentModality { get; set; }
+        public Borrower? Borrower { get; set; }
+        public int ModalityId { get; set; }
+        public PaymentModality? PaymentModality { get; set; }
         public decimal RequestedAmount { get; set;}
         public decimal InterestRate { get; set; }
+        public decimal MaintenanceFee { get; set; }
+        public decimal ProcessingFee { get; set; }
+        public decimal InsuranceFee { get; set; }
         public int Duration { get; set;}
         public string? Purpose {get; set; }
         public DateTime ApplicationDate { get; set; }
