@@ -1,10 +1,12 @@
 @page "/settings"
 @using Application.DTO
+@using Application.Interfaces
 @using Application.Services.GuarantorTypes
 @using Application.Services.PaymentModalities
 @using Application.Services.PaymentTypes
 @using Application.Services.Reasons
 @using Application.Services.LoanProducts
+@using Application.Services.LoanProductSettings
 @using Application.Services.RequiredDocuments
 @using Domain.Entities
 @using LoanPlatform.Components.Dialogs
@@ -13,6 +15,8 @@
 @inject IReasonService ReasonService
 @inject IGuarantorTypeService GuarantorTypeService
 @inject ILoanProductService LoanProductService
+@inject ILoanProductSettingService LoanProductSettingService
+
 @inject IRequiredDocumentService RequiredDocumentService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -151,18 +155,56 @@
                         @* <MudTh>Id</MudTh> *@
                         <MudTh>Name</MudTh>
                         <MudTh>Description</MudTh>
-                        <MudTh>Interest Rate</MudTh>
-                        <MudTh>Actions</MudTh>
+                         <MudTh>Status</MudTh>
+                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         @* <MudTd>@context.Id</MudTd> *@
                         <MudTd>@context.Name</MudTd>
                         <MudTd>@context.Description</MudTd>
-                        <MudTd>@context.InterestRate</MudTd>
+                        <MudTd>@context.Status</MudTd>
                         <MudTd>
                             <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewLoanProductAsync(context)" />
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditLoanProductAsync(context)" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteLoanProductAsync(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudTabPanel>
+
+        <!-- Loan Product Settings -->
+
+        <MudTabPanel Text="Loan Product Settings">
+            <MudPaper Class="pa-4">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h6">Loan Product Settings</MudText>
+                    <MudButton OnClick="AddLoanProductSettingAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+                        Add
+                    </MudButton>
+                </MudStack>
+                <MudTable Items="_loanProductSettings" Dense="true" Hover="true" Outlined="true">
+                    <HeaderContent>
+                        @* <MudTh>Id</MudTh> *@
+                        <MudTh>LoanProduct</MudTh>
+                        <MudTh>InterestRate</MudTh>
+                        <MudTh>MaintenanceFee</MudTh>
+                        <MudTh>ProcessingFee</MudTh>
+                        <MudTh>InsuranceFee</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.LoanProduct?.Name</MudTd>
+                        <MudTd>@context.InterestRate</MudTd>
+                        <MudTd>@context.MaintenanceFee</MudTd>
+                        <MudTd>@context.ProcessingFee</MudTd>
+                        <MudTd>@context.InsuranceFee</MudTd>
+                        <MudTd>@context.Status</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" OnClick="() => ViewLoanProductSettingAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="() => EditLoanProductSettingAsync(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteLoanProductSettingAsync(context)" />
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
@@ -213,6 +255,10 @@
     private List<GuarantorType> _guarantorTypes = [];
     // Loan Products
     private List<LoanProduct> _loanProducts = [];
+    
+    // Loan Product Settings
+    private List<LoanProductSetting> _loanProductSettings = [];
+
     // Required Documents
     private List<RequiredDocument> _requiredDocuments = [];
 
@@ -232,6 +278,7 @@
         _guarantorTypes = await GuarantorTypeService.GetAllAsync();
         _loanProducts = await LoanProductService.GetAllAsync();
         _requiredDocuments = await RequiredDocumentService.GetAllRequiredDocumentsAsync();
+        _loanProductSettings = await LoanProductSettingService.GetAllAsync();
     }
 
     private async Task<string?> OpenNameDialogAsync(string title, string currentName = "")
@@ -409,7 +456,7 @@
         { 
             Name = dto.Name, 
             Description = dto.Description, 
-            InterestRate = dto.InterestRate 
+            Status = dto.Status,
         });
         await LoadAllAsync();
         Snackbar.Add("Loan product added.", Severity.Success);
@@ -420,7 +467,7 @@
         var parameters = new DialogParameters<LoanProductEditDialog>
         {
             { x => x.Title, "Edit Loan Product" },
-            { x => x.LoanProduct, new LoanProductDTO { Id = item.Id, Name = item.Name ?? "", Description = item.Description ?? "", InterestRate = item.InterestRate ?? 0 } }
+            { x => x.LoanProduct, new LoanProductDTO { Id = item.Id, Name = item.Name ?? "", Description = item.Description ?? "" } }
         };
 
         var dialog = await DialogService.ShowAsync<LoanProductEditDialog>("Edit Loan Product", parameters);
@@ -435,7 +482,7 @@
             Id = dto.Id, 
             Name = dto.Name, 
             Description = dto.Description, 
-            InterestRate = dto.InterestRate 
+            @* InterestRate = dto.InterestRate  *@
         });
         await LoadAllAsync();
         Snackbar.Add("Loan product updated.", Severity.Success);
@@ -444,9 +491,15 @@
     private async Task DeleteLoanProductAsync(LoanProduct item)
     {
         if (!await ConfirmDeleteAsync(item.Name)) return;
-        await LoanProductService.DeleteLoanProductAsync(item.Id);
+        await LoanProductService.UpdateLoanProductAsync(new UpdateLoanProductDTO 
+        { 
+            Id = item.Id, 
+            Name = item.Name ?? "", 
+            Description = item.Description ?? "", 
+            Status = "Deactivated" 
+        });
         await LoadAllAsync();
-        Snackbar.Add("Loan product deleted.", Severity.Success);
+        Snackbar.Add("Loan product deactivated.", Severity.Success);
     }
 
     private async Task ViewLoanProductAsync(LoanProduct item)
@@ -457,13 +510,120 @@
             { x => x.Id, item.Id },
             { x => x.Name, item.Name ?? "" },
             { x => x.Description, item.Description ?? "" },
-            { x => x.InterestRate, item.InterestRate ?? 0 }
+            @* { x => x.InterestRate, item.InterestRate ?? 0 } *@
         };
 
         await DialogService.ShowAsync<LoanProductDetailsDialog>("Loan Product Details", parameters);
     }
 
-    <!-- Required Documents -->
+    private async Task AddLoanProductSettingAsync()
+    {
+        var parameters = new DialogParameters<LoanProductSettingDialog>
+        {
+            { x => x.Title, "Add Loan Product Setting" },
+            { x => x.Model, new LoanProductSettingDTO() },
+            { x => x.LoanProducts, await LoanProductService.GetAllAsync() }
+        };
+
+        var dialog = await DialogService.ShowAsync<LoanProductSettingDialog>("Add Loan Product Setting", parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled || result.Data is not LoanProductSettingDTO dto)
+        {
+            return;
+        }
+
+        await LoanProductSettingService.CreateLoanProductSettingAsync(new CreateLoanProductSettingDTO 
+        { 
+            LoanProductId = dto.LoanProduct?.Id ?? 0,
+            LoanProduct = dto.LoanProduct!, 
+            InterestRate = dto.InterestRate, 
+            MaintenanceFee = dto.MaintenanceFee, 
+            ProcessingFee = dto.ProcessingFee,
+            InsuranceFee = dto.InsuranceFee,
+            Status = dto.Status,
+        });
+        await LoadAllAsync();
+        Snackbar.Add("Loan product setting added.", Severity.Success);
+    }
+
+    private async Task EditLoanProductSettingAsync(LoanProductSetting item)
+    {
+        var dto = new LoanProductSettingDTO
+        {
+            Id = item.Id,
+            LoanProductId = item.LoanProductId,
+            LoanProduct = item.LoanProduct,
+            InterestRate = item.InterestRate,
+            MaintenanceFee = item.MaintenanceFee,
+            ProcessingFee = item.ProcessingFee,
+            InsuranceFee = item.InsuranceFee,
+            Status = item.Status,
+            CreatedAt = item.CreatedAt,
+            UpdatedAt = item.UpdatedAt
+        };
+
+        var parameters = new DialogParameters<LoanProductSettingDialog>
+        {
+            { x => x.Title, "Edit Loan Product Setting" },
+            { x => x.Model, dto },
+            { x => x.LoanProducts, await LoanProductService.GetAllAsync() }
+        };
+
+        var dialog = await DialogService.ShowAsync<LoanProductSettingDialog>("Edit Loan Product Setting", parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled || result.Data is not LoanProductSettingDTO resultDto)
+        {
+            return;
+        }
+
+        await LoanProductSettingService.UpdateLoanProductSettingAsync(new UpdateLoanProductSettingDTO 
+        { 
+            Id = resultDto.Id,
+            LoanProductId = resultDto.LoanProductId,
+            LoanProduct = resultDto.LoanProduct, 
+            InterestRate = resultDto.InterestRate, 
+            MaintenanceFee = resultDto.MaintenanceFee, 
+            ProcessingFee = resultDto.ProcessingFee,
+            InsuranceFee = resultDto.InsuranceFee,
+            Status = resultDto.Status,
+        });
+        await LoadAllAsync();
+        Snackbar.Add("Loan product setting updated.", Severity.Success);
+    }
+
+    private async Task DeleteLoanProductSettingAsync(LoanProductSetting item)
+    {
+        if (!await ConfirmDeleteAsync($"{item.LoanProduct?.Name} - {item.InterestRate}%")) return;
+        await LoanProductSettingService.DeleteLoanProductSettingAsync(item.Id);
+        await LoadAllAsync();
+        Snackbar.Add("Loan product setting deleted.", Severity.Success);
+    }
+
+    private async Task ViewLoanProductSettingAsync(LoanProductSetting item)
+    {
+        var dto = new LoanProductSettingDTO
+        {
+            Id = item.Id,
+            LoanProductId = item.LoanProductId,
+            LoanProduct = item.LoanProduct,
+            InterestRate = item.InterestRate,
+            MaintenanceFee = item.MaintenanceFee,
+            ProcessingFee = item.ProcessingFee,
+            InsuranceFee = item.InsuranceFee,
+            Status = item.Status,
+            CreatedAt = item.CreatedAt,
+            UpdatedAt = item.UpdatedAt
+        };
+
+        var parameters = new DialogParameters<LoanProductSettingDialog>
+        {
+            { x => x.Title, "Loan Product Setting Details" },
+            { x => x.IsReadOnly, true },
+            { x => x.Model, dto }
+        };
+
+        await DialogService.ShowAsync<LoanProductSettingDialog>("Loan Product Setting Details", parameters);
+    }
     private async Task AddRequiredDocumentAsync()
     {
         var parameters = new DialogParameters<RequiredDocumentDialog>

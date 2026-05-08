@@ -49,6 +49,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXEJvcnJvd2VyRGlhbG9nLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/KEVINE/source/repos/Loan-Platform/Web/Components/Dialogs/CollateralDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXENvbGxhdGVyYWxEaWFsb2cucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/KEVINE/source/repos/Loan-Platform/Web/Components/Dialogs/ConfirmDialog.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXENvbmZpcm1EaWFsb2cucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -73,6 +77,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXExvYW5Qcm9kdWN0RWRpdERpYWxvZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/KEVINE/source/repos/Loan-Platform/Web/Components/Dialogs/LoanProductSettingDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXExvYW5Qcm9kdWN0U2V0dGluZ0RpYWxvZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/KEVINE/source/repos/Loan-Platform/Web/Components/Dialogs/NameDetailsDialog.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEaWFsb2dzXE5hbWVEZXRhaWxzRGlhbG9nLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -95,6 +103,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/KEVINE/source/repos/Loan-Platform/Web/Components/Pages/Borrower.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xCb3Jyb3dlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/KEVINE/source/repos/Loan-Platform/Web/Components/Pages/Collaterals.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xDb2xsYXRlcmFscy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/KEVINE/source/repos/Loan-Platform/Web/Components/Pages/Counter.razor]

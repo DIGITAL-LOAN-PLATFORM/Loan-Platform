@@ -9,7 +9,7 @@ namespace Application.Services.LoanApplications
         //Get All
         Task<List<LoanApplication>> GetAllLoanApplicationAsync();
         //Get By Id
-        Task<LoanApplication> GetLoanApplicationByIdAsync(int id);
+        Task<LoanApplication?> GetLoanApplicationByIdAsync(int id);
         //Create
         Task CreateLoanApplicationAsync(CreateLoanApplicationDTO createLoanApplicationDTO);
         //Update

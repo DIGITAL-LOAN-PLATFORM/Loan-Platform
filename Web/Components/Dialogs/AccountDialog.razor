@@ -1,4 +1,4 @@
-@using Application.Interfaces
+@* @using Application.Interfaces
 @using Domain.Entities
 @using Domain.ValueObjects
 @using Application.DTO
@@ -102,6 +102,174 @@
         }
     }
 
+    private void Close()
+    {
+        MudDialog.Cancel();
+    }
+} *@
+
+@using Application.Interfaces
+@using Domain.Entities
+@using Domain.ValueObjects
+@using Application.DTO
+@using Application.Services.Accounts
+
+@using MudBlazor
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components
+
+@inject IAccountService AccountService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudDialog Style="overflow:hidden;">
+    <DialogContent>
+        @* HEADER SECTION WITH ORANGE GRADIENT FOR COLLATERAL *@
+        <MudPaper Elevation="0" 
+                  Style="background: linear-gradient(135deg, #017771 0%, #017771 100%); padding:14px 18px; margin-bottom:16px;">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Style="color:white; font-size:1.6rem;" />
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.subtitle1" Style="color:white; font-weight:700; line-height:1.2;">
+                        Register Account
+                    </MudText>
+                    <MudText Typo="Typo.caption" Style="color:rgba(255,255,255,0.90);">
+                        Add account
+                    </MudText>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+
+        <EditForm Model="Model" OnValidSubmit="OnValidSubmit" FormName="CreateAccountForm">
+            <DataAnnotationsValidator />
+            
+            <MudGrid Spacing="1">
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.Name"
+                                  For="@(() => Model.Name)" 
+                                  Label="Account Name" 
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Required="true" 
+                                  ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.Provider"
+                                  For="@(() => Model.Provider)" 
+                                  Label="Account Provider" 
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Required="true" 
+                                  ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Model.Number"
+                                  For="@(() => Model.Number)" 
+                                  Label="Account Number" 
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Required="true" 
+                                  ReadOnly="IsReadOnly" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    @if (IsReadOnly)
+                    {
+                        <MudTextField @bind-Value="_accountTypeDisplay" Label="Account Type" ReadOnly="true" Required="true" />
+                    }
+                    else
+                    {
+                        <MudSelect @bind-Value="_accountTypeValue" Label="Account Type" Required="true">
+                            @foreach (var accountType in Enum.GetValues<AccountType>())
+                            {
+                                <MudSelectItem Value="@((int)accountType)">@accountType.ToString()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                </MudItem>
+
+                <MudItem xs="6">
+                    <MudNumericField Label="Estimated Value (RWF)" Variant="Variant.Outlined" 
+                                     Margin="Margin.Dense" @bind-Value="Model.Balance" 
+                                     HideSpinButtons="true" Adornment="Adornment.Start" AdornmentText="Frw" />
+                </MudItem>
+
+                <MudItem xs="12" Class="mt-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"  
+                               ButtonType="ButtonType.Submit" Style="font-weight: bold; height:40px;">
+                        Save 
+                    </MudButton>
+                </MudItem>
+                @* <DialogActions>
+                    <MudButton OnClick="@Close">Close</MudButton>
+                    @if (!IsReadOnly)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                   ButtonType="ButtonType.Submit" Style="font-weight: bold; height:40px;">Save</MudButton>
+                    }
+               </DialogActions> *@
+            </MudGrid>
+            </EditForm>
+        </DialogContent>
+    </MudDialog>
+
+
+ @code {
+    [CascadingParameter] 
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public CreateAccountDTO Model { get; set; } = new CreateAccountDTO();
+
+    [Parameter]
+    public int AccountId { get; set; } = 0;
+
+    [Parameter]
+    public bool IsReadOnly { get; set; } = false;
+
+    private MudForm _form = default!;
+    private bool _success;
+    private int _accountTypeValue;
+    private string _accountTypeDisplay = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (Model != null)
+        {
+            _accountTypeValue = (int?)Model.Type ?? 0;
+            _accountTypeDisplay = ((AccountType)_accountTypeValue).ToString();
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        try
+     {
+
+
+            // 2. Call your Repository/Service
+            // This matches the CreateCollateralAsync method in your CollateralRepository
+            await AccountService.CreateAccountAsync(Model);
+
+            // 3. Success Feedback
+            Snackbar.Add("Account registered successfully!", Severity.Success);
+
+            // 4. Close the Dialog and pass 'true' back to the main page to trigger a refresh
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            // 5. Error Handling
+            Snackbar.Add($"Error saving collateral: {ex.Message}", Severity.Error);
+        }
+       
+
+        // Open the CreateGuarantorDialog with parameters
+          @* var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+          var parameters = new DialogParameters<CreateGuarantorDialog>(); 
+            
+            await DialogService.ShowAsync<CreateGuarantorDialog>("Create Guarantor Information", parameters, options); *@
+    }
     private void Close()
     {
         MudDialog.Cancel();

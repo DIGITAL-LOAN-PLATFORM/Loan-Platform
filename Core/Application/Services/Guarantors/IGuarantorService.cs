@@ -1,7 +1,7 @@
 using Application.DTO;
 using Domain.Entities;
 
-namespace Application.Interfaces
+namespace Application.Services.Guarantors
 {
     public interface IGuarantorService
     {

@@ -3,11 +3,14 @@
 @using Application.Interfaces
 @using Application.Services.Borrowers
 @using Application.Services.LoanProducts
+@using Application.Services.LoanProductSettings
 @using Application.Services.PaymentModalities
 @using Application.Services.LoanApplications
 @using Application.Services.RequiredDocuments
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
 @inject IBorrowerService BorrowerService
 @inject ILoanProductService LoanProductService
+@inject ILoanProductSettingService LoanProductSettingService
 @inject IPaymentModalityService PaymentModalityService
 @inject ILoanApplicationService LoanApplicationService
 @inject IRequiredDocumentService RequiredDocumentService
@@ -23,7 +26,8 @@
                 @if (IsReadOnly)
                 {
                     var b = _borrowers.FirstOrDefault(x => x.Id == Model.BorrowerId);
-                    var p = _loanProducts.FirstOrDefault(x => x.Id == Model.ProductId);
+                    var setting = _loanProductSettings.FirstOrDefault(x => x.Id == Model.ProductSettingId);
+                    var p = setting?.LoanProduct;
                     <MudItem xs="12">
                         <MudCard Outlined="true" Class="mb-3">
                             <MudCardContent>
@@ -80,15 +84,24 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" md="6">
-                        <MudSelect T="int" Value="Model.ProductId" ValueChanged="OnProductChangedAsync" Label="Loan Product" Required="true" ReadOnly="IsReadOnly">
-                            @foreach (var product in _loanProducts)
+                        <MudSelect T="int" Value="Model.ProductSettingId" ValueChanged="OnProductChangedAsync" Label="Loan Product" Required="true" ReadOnly="IsReadOnly">
+                            @foreach (var product in _loanProductSettings)
                             {
-                                <MudSelectItem Value="@product.Id">@product.Name</MudSelectItem>
+                                <MudSelectItem Value="@product.Id">@product.LoanProduct?.Name</MudSelectItem>
                             }
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" md="6">
-                        <MudNumericField @bind-Value="Model.InterestRate" Label="Interest Rate" Format="N2" Required="true" ReadOnly="IsReadOnly" Immediate="true" />
+                        <MudNumericField @bind-Value="Model.InterestRate" Label="Interest Rate (%)" Format="N2" Required="true" ReadOnly="IsReadOnly" Immediate="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudNumericField @bind-Value="Model.ProcessingFee" Label="Processing Fee" Format="N2" ReadOnly="IsReadOnly" Immediate="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudNumericField @bind-Value="Model.InsuranceFee" Label="Insurance Fee" Format="N2" ReadOnly="IsReadOnly" Immediate="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudNumericField @bind-Value="Model.MaintenanceFee" Label="Maintenance Fee" Format="N2" ReadOnly="IsReadOnly" Immediate="true" />
                     </MudItem>
                 }
                 <MudItem xs="12" md="6">
@@ -149,11 +162,9 @@
                         <MudItem xs="12" md="6">
                             <MudText Typo="Typo.body1" Style="font-weight: 500;">@reqDoc.DocumentName</MudText>
                             <MudFileUpload T="IBrowserFile" FilesChanged="(file) => OnFileUploaded(reqDoc.Id, file)">
-                                <ActivatorContent>
-                                    <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="mt-1">
-                                        Select File
-                                    </MudButton>
-                                </ActivatorContent>
+                                <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Size="Size.Small" Class="mt-1">
+                                    Select File
+                                </MudButton>
                             </MudFileUpload>
                             @if (_uploadedFiles.ContainsKey(reqDoc.Id))
                             {
@@ -214,7 +225,7 @@
     }
 
     private List<Borrower> _borrowers = [];
-    private List<LoanProduct> _loanProducts = [];
+    private List<LoanProductSetting> _loanProductSettings = [];
     private List<PaymentModality> _modalities = [];
     private List<RequiredDocument> _requiredDocuments = [];
     private Dictionary<int, IBrowserFile> _uploadedFiles = new();
@@ -289,9 +300,9 @@
     protected override async Task OnInitializedAsync()
     {
         _borrowers = await BorrowerService.GetAllAsync();
-        _loanProducts = await LoanProductService.GetAllAsync();
+        _loanProductSettings = await LoanProductSettingService.GetAllAsync();
         _modalities = await PaymentModalityService.GetAllAsync();
-
+    
         if (ApplicationId != 0)
         {
             var app = await LoanApplicationService.GetLoanApplicationByIdAsync(ApplicationId);
@@ -301,27 +312,31 @@
                 _approvalStatus = app.ApprovalStatus;
             }
         }
-        else if (Model.ProductId != 0)
+        else if (Model.ProductSettingId != 0)
         {
-            await LoadRequiredDocumentsAsync(Model.ProductId);
+            await LoadRequiredDocumentsAsync(Model.ProductSettingId);
         }
     }
 
-    private async Task OnProductChangedAsync(int productId)
+    private async Task OnProductChangedAsync(int productSettingId)
     {
-        Model.ProductId = productId;
-        var product = _loanProducts.FirstOrDefault(p => p.Id == productId);
-        if (product != null)
+        Model.ProductSettingId = productSettingId;
+        var productSetting = _loanProductSettings.FirstOrDefault(p => p.Id == productSettingId);
+        if (productSetting != null)
         {
-            Model.InterestRate = product.InterestRate ?? 0;
+            Model.InterestRate = productSetting.InterestRate;
+            Model.ProcessingFee = productSetting.ProcessingFee;
+            Model.InsuranceFee = productSetting.InsuranceFee;
+            Model.MaintenanceFee = productSetting.MaintenanceFee;
         }
-        await LoadRequiredDocumentsAsync(productId);
+        await LoadRequiredDocumentsAsync(productSettingId);
     }
 
-    private async Task LoadRequiredDocumentsAsync(int productId)
+    private async Task LoadRequiredDocumentsAsync(int productSettingId)
     {
+        var productSetting = _loanProductSettings.FirstOrDefault(p => p.Id == productSettingId);
         _requiredDocuments = (await RequiredDocumentService.GetAllRequiredDocumentsAsync())
-            .Where(r => r.LoanProductId == productId).ToList();
+            .Where(r => r.LoanProductId == productSetting?.LoanProductId).ToList();
         _uploadedFiles.Clear();
     }
 
@@ -379,11 +394,14 @@
                 var updateDto = new UpdateLoanApplicationDTO
                 {
                     Id = ApplicationId,
-                    ProductId = Model.ProductId,
+                    ProductSettingId = Model.ProductSettingId,
                     BorrowerId = Model.BorrowerId,
                     ModalityId = Model.ModalityId,
                     RequestedAmount = Model.RequestedAmount,
                     InterestRate = Model.InterestRate,
+                    ProcessingFee = Model.ProcessingFee,
+                    InsuranceFee = Model.InsuranceFee,
+                    MaintenanceFee = Model.MaintenanceFee,
                     Duration = Model.Duration,
                     Purpose = Model.Purpose,
                     ApplicationDate = Model.ApplicationDate,

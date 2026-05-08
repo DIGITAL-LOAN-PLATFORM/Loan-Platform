@@ -23,6 +23,9 @@
             <MudTh Style="font-weight: bold;">Product</MudTh>
             <MudTh Style="font-weight: bold;">Amount</MudTh>
             <MudTh Style="font-weight: bold;">Interest Rate</MudTh>
+            <MudTh Style="font-weight: bold;">Processing Fee</MudTh>
+            <MudTh Style="font-weight: bold;">Insurance Fee</MudTh>
+            <MudTh Style="font-weight: bold;">Maintenance Fee</MudTh>
             <MudTh Style="font-weight: bold;">Date</MudTh>
             <MudTh Style="font-weight: bold;">Status</MudTh>
             <MudTh Style="font-weight: bold;">Actions</MudTh>
@@ -30,9 +33,12 @@
         <RowTemplate>
             <MudTd>@context.ApplicationNumber</MudTd>
             <MudTd>@($"{context.Borrower?.FirstName} {context.Borrower?.LastName}")</MudTd>
-            <MudTd>@context.loanProduct?.Name</MudTd>
+            <MudTd>@context.LoanProductSetting?.LoanProduct?.Name</MudTd>
             <MudTd>@context.RequestedAmount.ToString("C")</MudTd>
             <MudTd>@context.InterestRate.ToString("F2")%</MudTd>
+            <MudTd>@context.LoanProductSetting?.ProcessingFee.ToString("C")</MudTd>
+            <MudTd>@context.LoanProductSetting?.InsuranceFee.ToString("C")</MudTd>
+            <MudTd>@context.LoanProductSetting?.MaintenanceFee.ToString("C")</MudTd>
             <MudTd>@context.ApplicationDate.ToShortDateString()</MudTd>
             <MudTd>
                 <MudChip T="string" Color="@GetStatusColor(context.ApprovalStatus)" Size="Size.Small" Variant="Variant.Filled">
@@ -120,7 +126,7 @@
             { x => x.ApplicationId, app.Id },
             { x => x.Model, new CreateLoanApplicationDTO 
                 { 
-                    ProductId = app.ProductId, 
+                    ProductSettingId = app.ProductSettingId, 
                     BorrowerId = app.BorrowerId, 
                     ModalityId = app.ModalityId, 
                     RequestedAmount = app.RequestedAmount, 
@@ -150,7 +156,7 @@
             { x => x.IsReadOnly, true },
             { x => x.Model, new CreateLoanApplicationDTO 
                 { 
-                    ProductId = app.ProductId, 
+                    ProductSettingId = app.ProductSettingId, 
                     BorrowerId = app.BorrowerId, 
                     ModalityId = app.ModalityId, 
                     RequestedAmount = app.RequestedAmount, 
